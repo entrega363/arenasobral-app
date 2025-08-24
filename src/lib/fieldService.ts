@@ -176,6 +176,19 @@ export class FieldService {
   }
 
   /**
+   * Get booking by ID
+   */
+  static getBookingById(bookingId: string): Booking | null {
+    try {
+      const bookings = this.getAllBookings()
+      return bookings.find(booking => booking.id === bookingId) || null
+    } catch (error) {
+      console.error('Error getting booking by ID:', error)
+      return null
+    }
+  }
+
+  /**
    * Cancel a booking
    */
   static cancelBooking(bookingId: string): boolean {

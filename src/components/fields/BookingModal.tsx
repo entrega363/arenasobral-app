@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { X, Calendar, Clock, MapPin, CreditCard, Smartphone, Banknote } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -13,6 +13,7 @@ interface BookingModalProps {
   selectedDate: Date
   selectedTimeSlot: TimeSlot
   onConfirm: (bookingData: BookingFormData) => void
+  bookingId?: string // Optional prop for editing existing bookings
 }
 
 export function BookingModal({
@@ -21,7 +22,8 @@ export function BookingModal({
   field,
   selectedDate,
   selectedTimeSlot,
-  onConfirm
+  onConfirm,
+  bookingId
 }: BookingModalProps) {
   const [formData, setFormData] = useState<BookingFormData>({
     playerName: '',
@@ -32,6 +34,48 @@ export function BookingModal({
   })
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [isEditMode, setIsEditMode] = useState(false)
+
+  // Load existing booking data if bookingId is provided
+  useEffect(() => {
+    if (bookingId && isOpen) {
+      loadExistingBooking()
+    } else if (isOpen) {
+      // Reset form when opening for new booking
+      setFormData({
+        playerName: '',
+        playerWhatsapp: '',
+        playerEmail: '',
+        notes: '',
+        paymentMethod: 'PIX'
+      })
+      setIsEditMode(false)
+    }
+  }, [bookingId, isOpen])
+
+  const loadExistingBooking = async () => {
+    try {
+      setLoading(true)
+      // Import FieldService dynamically to avoid circular imports
+      const { FieldService } = await import('@/lib/fieldService')
+      const booking = FieldService.getBookingById(bookingId!)
+      
+      if (booking) {
+        setFormData({
+          playerName: booking.playerName,
+          playerWhatsapp: booking.playerWhatsapp,
+          playerEmail: booking.playerEmail || '',
+          notes: booking.notes || '',
+          paymentMethod: booking.paymentMethod
+        })
+        setIsEditMode(true)
+      }
+    } catch (error) {
+      console.error('Error loading existing booking:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   if (!isOpen) return null
 
@@ -106,7 +150,9 @@ export function BookingModal({
       <Card className="w-full max-w-md max-h-[90vh] overflow-y-auto bg-white rounded-xl">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b">
-          <h2 className="text-xl font-bold text-slate-800">Confirmar Reserva</h2>
+          <h2 className="text-xl font-bold text-slate-800">
+            {isEditMode ? 'Editar Reserva' : 'Confirmar Reserva'}
+          </h2>
           <Button variant="ghost" size="icon" onClick={onClose} disabled={loading}>
             <X className="w-5 h-5" />
           </Button>
@@ -268,10 +314,10 @@ export function BookingModal({
             {loading ? (
               <div className="flex items-center gap-2">
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                Confirmando...
+                {isEditMode ? 'Salvando...' : 'Confirmando...'}
               </div>
             ) : (
-              'Confirmar Reserva'
+              isEditMode ? 'Salvar Alterações' : 'Confirmar Reserva'
             )}
           </Button>
         </div>

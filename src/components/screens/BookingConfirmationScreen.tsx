@@ -9,7 +9,11 @@ import { StatusBar } from '@/components/layout/StatusBar'
 import { FieldService } from '@/lib/fieldService'
 import { Field, Booking } from '@/types'
 
-export function BookingConfirmationScreen() {
+interface BookingConfirmationScreenProps {
+  bookingId?: string
+}
+
+export function BookingConfirmationScreen({ bookingId }: BookingConfirmationScreenProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [booking, setBooking] = useState<Booking | null>(null)
@@ -20,17 +24,31 @@ export function BookingConfirmationScreen() {
   useEffect(() => {
     loadBookingDetails()
     simulateEmailConfirmation()
-  }, [])
+  }, [bookingId])
 
   const loadBookingDetails = async () => {
     try {
       setLoading(true)
       setError(null)
 
-      // Get booking data from URL params or localStorage
-      const bookingId = searchParams.get('bookingId')
-      const bookingData = localStorage.getItem('lastBooking')
+      // Priority order: prop bookingId > URL param > localStorage
+      const targetBookingId = bookingId || searchParams.get('bookingId')
       
+      if (targetBookingId) {
+        // Try to get booking by ID from service
+        const bookingData = FieldService.getBookingById(targetBookingId)
+        if (bookingData) {
+          setBooking(bookingData)
+          
+          // Load field details
+          const fieldData = FieldService.getFieldById(bookingData.fieldId)
+          setField(fieldData)
+          return
+        }
+      }
+
+      // Fallback to localStorage for backward compatibility
+      const bookingData = localStorage.getItem('lastBooking')
       if (bookingData) {
         const parsedBooking = JSON.parse(bookingData)
         setBooking(parsedBooking)
