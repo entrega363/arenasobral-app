@@ -65,6 +65,25 @@ export interface Field {
   owner: FieldOwner
   timeSlots: TimeSlot[]
   bookings: Booking[]
+  // Extended fields for search and booking
+  description: string
+  fieldType: 'SOCIETY' | 'FUTSAL' | 'BEACH' | 'INDOOR'
+  photos: FieldPhoto[]
+  amenities: FieldAmenity[]
+  reviews: FieldReview[]
+  rating: number
+  pricePerHour: number
+  address: string
+  coordinates?: {
+    lat: number
+    lng: number
+  }
+  rules: string[]
+  contactInfo: {
+    phone: string
+    whatsapp: string
+    email?: string
+  }
 }
 
 export interface FieldOwner {
@@ -97,6 +116,12 @@ export interface Booking {
   field: Field
   timeSlot: TimeSlot
   team?: Team
+  // Extended fields for booking
+  playerEmail?: string
+  notes?: string
+  paymentMethod: 'PIX' | 'CARD' | 'CASH'
+  createdAt: Date
+  updatedAt: Date
 }
 
 export interface ContractOffer {
@@ -190,4 +215,64 @@ export interface TimeSlotFormData {
   endTime: string
   price: number
   available: boolean
+}
+
+// New types for field search and booking system
+export interface FieldFilters {
+  location?: string
+  priceRange?: {
+    min: number
+    max: number
+  }
+  fieldType?: 'SOCIETY' | 'FUTSAL' | 'BEACH' | 'INDOOR'
+  date?: Date
+  timeRange?: {
+    start: string
+    end: string
+  }
+  amenities?: string[]
+}
+
+export interface FieldAmenity {
+  id: string
+  name: string
+  icon: string
+}
+
+export interface FieldPhoto {
+  id: string
+  url: string
+  alt: string
+  isPrimary: boolean
+}
+
+export interface FieldReview {
+  id: string
+  userId: string
+  userName: string
+  rating: number
+  comment: string
+  createdAt: Date
+}
+
+export interface BookingFormData {
+  playerName: string
+  playerWhatsapp: string
+  playerEmail?: string
+  notes?: string
+  paymentMethod: 'PIX' | 'CARD' | 'CASH'
+}
+
+export enum FieldErrorType {
+  FIELD_NOT_FOUND = 'FIELD_NOT_FOUND',
+  TIME_SLOT_UNAVAILABLE = 'TIME_SLOT_UNAVAILABLE',
+  BOOKING_FAILED = 'BOOKING_FAILED',
+  USER_NOT_AUTHENTICATED = 'USER_NOT_AUTHENTICATED',
+  INVALID_DATE = 'INVALID_DATE'
+}
+
+export interface FieldError {
+  type: FieldErrorType
+  message: string
+  details?: any
 }

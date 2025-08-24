@@ -2,15 +2,20 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, MapPin, Calendar, DollarSign, Users, Clock, TrendingUp } from 'lucide-react'
+import { ArrowLeft, MapPin, Calendar, DollarSign, Users, Clock, TrendingUp, Settings } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { StatusBar } from '@/components/layout/StatusBar'
+import { FieldManagement } from '@/components/fields/FieldManagement'
+import { FieldBookingsView } from '@/components/fields/FieldBookingsView'
 import { formatCurrency } from '@/lib/utils'
+import { Field } from '@/types'
 
 export function FieldOwnerDashboard() {
   const router = useRouter()
   const [selectedTab, setSelectedTab] = useState('overview')
+  const [selectedField, setSelectedField] = useState<Field | null>(null)
+  const [showFieldBookings, setShowFieldBookings] = useState(false)
 
   const fieldStats = {
     totalBookings: 45,
@@ -59,10 +64,21 @@ export function FieldOwnerDashboard() {
 
   const tabs = [
     { id: 'overview', label: 'Visão Geral', icon: TrendingUp },
+    { id: 'fields', label: 'Areninhas', icon: MapPin },
     { id: 'schedule', label: 'Agenda', icon: Calendar },
     { id: 'bookings', label: 'Reservas', icon: Users },
     { id: 'revenue', label: 'Receita', icon: DollarSign }
   ]
+
+  const handleFieldSelect = (field: Field) => {
+    setSelectedField(field)
+    setShowFieldBookings(true)
+  }
+
+  const handleBackToFields = () => {
+    setShowFieldBookings(false)
+    setSelectedField(null)
+  }
 
   return (
     <div className="bg-slate-800 min-h-screen">
@@ -104,7 +120,14 @@ export function FieldOwnerDashboard() {
       </div>
       
       <div className="px-4 pb-8">
-        {selectedTab === 'overview' && (
+        {showFieldBookings && selectedField ? (
+          <FieldBookingsView 
+            field={selectedField} 
+            onBack={handleBackToFields}
+          />
+        ) : selectedTab === 'fields' ? (
+          <FieldManagement onFieldSelect={handleFieldSelect} />
+        ) : selectedTab === 'overview' && (
           <div className="space-y-6">
             {/* Field Info */}
             <Card>
@@ -160,15 +183,15 @@ export function FieldOwnerDashboard() {
             <div className="grid grid-cols-2 gap-4">
               <Button 
                 className="h-16 flex flex-col gap-1"
-                onClick={() => router.push('/field/schedule')}
+                onClick={() => setSelectedTab('fields')}
               >
-                <Calendar className="w-5 h-5" />
-                Gerenciar Horários
+                <MapPin className="w-5 h-5" />
+                Minhas Areninhas
               </Button>
               <Button 
                 variant="outline"
                 className="h-16 flex flex-col gap-1"
-                onClick={() => router.push('/field/bookings')}
+                onClick={() => setSelectedTab('bookings')}
               >
                 <Users className="w-5 h-5" />
                 Ver Reservas

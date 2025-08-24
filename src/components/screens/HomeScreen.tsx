@@ -34,6 +34,14 @@ export function HomeScreen() {
       bgColor: 'bg-blue-500',
       onClick: () => router.push('/search/players')
     },
+    {
+      id: 'searchfields',
+      title: 'Buscar Areninhas',
+      subtitle: 'Encontre e reserve horários',
+      icon: MapPin,
+      bgColor: 'bg-green-600',
+      onClick: () => router.push('/search/fields')
+    },
 
 
 
