@@ -9,7 +9,7 @@ interface SwipeGestureOptions {
   threshold?: number
 }
 
-export function useSwipeGesture(options: SwipeGestureOptions) {
+export function useSwipeGesture<T extends HTMLElement = HTMLElement>(options: SwipeGestureOptions) {
   const {
     onSwipeLeft,
     onSwipeRight,
@@ -19,7 +19,7 @@ export function useSwipeGesture(options: SwipeGestureOptions) {
   } = options
 
   const touchStartRef = useRef<{ x: number; y: number } | null>(null)
-  const elementRef = useRef<HTMLElement>(null)
+  const elementRef = useRef<T>(null)
 
   useEffect(() => {
     const element = elementRef.current

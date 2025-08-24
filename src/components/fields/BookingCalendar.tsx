@@ -29,7 +29,7 @@ export function BookingCalendar({
   const [loading, setLoading] = useState(false)
 
   // Swipe gesture for month navigation
-  const calendarRef = useSwipeGesture({
+  const calendarRef = useSwipeGesture<HTMLDivElement>({
     onSwipeLeft: () => navigateMonth(1),
     onSwipeRight: () => navigateMonth(-1),
     threshold: 50
