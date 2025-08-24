@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { Check } from 'lucide-react'
 import { useResponsive } from '@/hooks/useResponsive'
 
