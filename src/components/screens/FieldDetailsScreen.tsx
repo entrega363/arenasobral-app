@@ -100,7 +100,6 @@ export function FieldDetailsScreen({ fieldId }: FieldDetailsScreenProps) {
         fieldId: fieldId,
         timeSlotId: selectedTimeSlot.id,
         date: selectedDate,
-        totalPrice: selectedTimeSlot.price,
         status: 'CONFIRMED'
       })
 
