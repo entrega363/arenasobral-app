@@ -8,11 +8,13 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { ArrowLeft, User, Users, Building2 } from 'lucide-react';
+import { ArrowLeft, User, Users, Building2, Camera, Upload } from 'lucide-react';
 
 export default function RegisterScreen() {
   const router = useRouter();
   const [userType, setUserType] = useState<string>('');
+  const [profilePhoto, setProfilePhoto] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string>('');
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -28,9 +30,40 @@ export default function RegisterScreen() {
     }));
   };
 
+  const handlePhotoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // Validar tipo de arquivo
+      if (!file.type.startsWith('image/')) {
+        toast.error('Por favor, selecione apenas arquivos de imagem');
+        return;
+      }
+
+      // Validar tamanho (máximo 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('A imagem deve ter no máximo 5MB');
+        return;
+      }
+
+      setProfilePhoto(file);
+      
+      // Criar preview da imagem
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setPhotoPreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleRegister = () => {
     if (!userType) {
       toast.error('Selecione o tipo de usuário');
+      return;
+    }
+
+    if (!profilePhoto) {
+      toast.error('A foto de perfil é obrigatória');
       return;
     }
 
@@ -104,6 +137,65 @@ export default function RegisterScreen() {
         </CardHeader>
         
         <CardContent className="space-y-4">
+          {/* Upload de foto de perfil */}
+          <div className="space-y-2">
+            <Label htmlFor="profilePhoto">Foto de Perfil *</Label>
+            <div className="flex flex-col items-center space-y-4">
+              {/* Preview da foto */}
+              <div className="relative">
+                {photoPreview ? (
+                  <div className="relative">
+                    <img
+                      src={photoPreview}
+                      alt="Preview da foto de perfil"
+                      className="w-24 h-24 rounded-full object-cover border-4 border-gray-200"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="absolute -bottom-2 -right-2 rounded-full w-8 h-8 p-0"
+                      onClick={() => {
+                        setProfilePhoto(null);
+                        setPhotoPreview('');
+                      }}
+                    >
+                      ×
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="w-24 h-24 rounded-full bg-gray-100 border-4 border-gray-200 flex items-center justify-center">
+                    <Camera className="w-8 h-8 text-gray-400" />
+                  </div>
+                )}
+              </div>
+              
+              {/* Botão de upload */}
+              <div className="relative">
+                <input
+                  id="profilePhoto"
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePhotoUpload}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex items-center gap-2"
+                >
+                  <Upload className="w-4 h-4" />
+                  {profilePhoto ? 'Alterar Foto' : 'Selecionar Foto'}
+                </Button>
+              </div>
+              
+              <p className="text-xs text-gray-500 text-center">
+                Formatos aceitos: JPG, PNG, GIF<br />
+                Tamanho máximo: 5MB
+              </p>
+            </div>
+          </div>
+
           {/* Seleção do tipo de usuário */}
           <div className="space-y-2">
             <Label htmlFor="userType">Tipo de Usuário *</Label>
