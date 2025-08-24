@@ -287,11 +287,11 @@ export function FieldDetailsScreen({ fieldId }: FieldDetailsScreenProps) {
                   <div className="flex items-center gap-2 mb-2">
                     <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
                       <span className="text-blue-600 text-sm font-bold">
-                        {review.playerName.charAt(0).toUpperCase()}
+                        {review.userName.charAt(0).toUpperCase()}
                       </span>
                     </div>
                     <div>
-                      <div className="font-medium text-slate-800">{review.playerName}</div>
+                      <div className="font-medium text-slate-800">{review.userName}</div>
                       <div className="flex items-center gap-1">
                         {[...Array(5)].map((_, i) => (
                           <Star
