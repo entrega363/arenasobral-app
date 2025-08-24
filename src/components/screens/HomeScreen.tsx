@@ -34,14 +34,7 @@ export function HomeScreen() {
       bgColor: 'bg-blue-500',
       onClick: () => router.push('/search/players')
     },
-    {
-      id: 'playerboard',
-      title: 'Painel do Jogador',
-      subtitle: '',
-      icon: User,
-      bgColor: 'bg-purple-500',
-      onClick: () => router.push('/dashboard/player')
-    },
+
     {
       id: 'teamowner',
       title: 'Painel do Dono do Time',
