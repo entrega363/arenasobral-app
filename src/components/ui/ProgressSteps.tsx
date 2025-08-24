@@ -182,7 +182,10 @@ export function useProgressSteps(totalSteps: number) {
   }
 
   const completeStep = (step: number) => {
-    setCompletedSteps(prev => [...new Set([...prev, step])])
+    setCompletedSteps(prev => {
+      if (prev.includes(step)) return prev
+      return [...prev, step]
+    })
   }
 
   const reset = () => {

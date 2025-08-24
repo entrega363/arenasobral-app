@@ -2,6 +2,8 @@
  * Sistema de cache simples para melhorar performance
  */
 
+import { useState, useEffect, useCallback } from 'react'
+
 interface CacheItem<T> {
   data: T
   timestamp: number
@@ -60,11 +62,11 @@ class SimpleCache {
   cleanup(): void {
     const now = Date.now()
     
-    for (const [key, item] of this.cache.entries()) {
+    this.cache.forEach((item, key) => {
       if (now - item.timestamp > item.ttl) {
         this.cache.delete(key)
       }
-    }
+    })
   }
 
   /**
@@ -217,11 +219,11 @@ export function withCache<T extends any[], R>(
 export function invalidateCache(pattern: string): void {
   const keysToDelete: string[] = []
   
-  for (const [key] of cache['cache'].entries()) {
+  cache['cache'].forEach((_, key) => {
     if (key.includes(pattern)) {
       keysToDelete.push(key)
     }
-  }
+  })
   
   keysToDelete.forEach(key => cache.delete(key))
 }
