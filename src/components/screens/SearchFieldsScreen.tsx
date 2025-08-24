@@ -111,7 +111,6 @@ export function SearchFieldsScreen() {
             title="Erro ao carregar areninhas"
             message={error}
             onRetry={loadFieldsData}
-            showHomeButton={false}
           />
         </div>
       </ResponsiveLayout>
