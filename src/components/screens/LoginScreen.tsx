@@ -25,6 +25,38 @@ export function LoginScreen() {
       return
     }
 
+    // Verificar usuários registrados
+    const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+    const user = registeredUsers.find((u: any) => 
+      u.email === email && u.password === password && u.userType === selectedUserType
+    );
+
+    // Credenciais de teste para demonstração
+    const testCredentials = [
+      { email: 'jogador@teste.com', password: '123456', type: 'PLAYER' },
+      { email: 'time@teste.com', password: '123456', type: 'TEAM_OWNER' },
+      { email: 'areninha@teste.com', password: '123456', type: 'FIELD_OWNER' },
+    ];
+
+    const isTestCredential = testCredentials.some(cred => 
+      cred.email === email && cred.password === password && cred.type === selectedUserType
+    );
+
+    // Senha universal para testes
+    const isUniversalPassword = password === '123456';
+
+    if (!user && !isTestCredential && !isUniversalPassword) {
+      alert('Email ou senha incorretos.\n\nPara testes rápidos:\n- Email: qualquer@email.com\n- Senha: 123456\n\nOu crie uma conta primeiro.')
+      return
+    }
+
+    // Simular salvamento do usuário logado
+    localStorage.setItem('currentUser', JSON.stringify({
+      email,
+      userType: selectedUserType,
+      isLoggedIn: true
+    }))
+
     // Redirecionar baseado no tipo de usuário
     switch (selectedUserType) {
       case 'PLAYER':

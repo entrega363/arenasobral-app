@@ -82,8 +82,33 @@ export default function RegisterScreen() {
       return;
     }
 
+    // Salvar dados do usuário no localStorage para permitir login
+    const userData = {
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone,
+      password: formData.password,
+      userType: userType,
+      profilePhoto: photoPreview,
+      createdAt: new Date().toISOString()
+    };
+
+    // Recuperar usuários existentes ou criar array vazio
+    const existingUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+    
+    // Verificar se email já existe
+    const emailExists = existingUsers.some((user: any) => user.email === formData.email);
+    if (emailExists) {
+      toast.error('Este email já está cadastrado');
+      return;
+    }
+
+    // Adicionar novo usuário
+    existingUsers.push(userData);
+    localStorage.setItem('registeredUsers', JSON.stringify(existingUsers));
+
     // Simular registro
-    toast.success('Conta criada com sucesso!');
+    toast.success('Conta criada com sucesso! Agora você pode fazer login.');
     
     // Redirecionar para login após registro
     setTimeout(() => {
