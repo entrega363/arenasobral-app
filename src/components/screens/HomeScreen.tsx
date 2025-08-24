@@ -36,14 +36,7 @@ export function HomeScreen() {
     },
 
 
-    {
-      id: 'fieldowner',
-      title: 'Areninha Privada',
-      subtitle: '',
-      icon: MapPin,
-      bgColor: 'bg-orange-500',
-      onClick: () => router.push('/dashboard/field-owner')
-    },
+
     {
       id: 'fieldschedule',
       title: 'Gerenciar Horários',
