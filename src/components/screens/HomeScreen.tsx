@@ -35,14 +35,7 @@ export function HomeScreen() {
       onClick: () => router.push('/search/players')
     },
 
-    {
-      id: 'teamowner',
-      title: 'Painel do Dono do Time',
-      subtitle: '',
-      icon: Users,
-      bgColor: 'bg-green-500',
-      onClick: () => router.push('/dashboard/team-owner')
-    },
+
     {
       id: 'fieldowner',
       title: 'Areninha Privada',
