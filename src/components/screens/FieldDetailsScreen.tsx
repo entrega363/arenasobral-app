@@ -22,13 +22,6 @@ export function FieldDetailsScreen({ fieldId }: FieldDetailsScreenProps) {
   const [error, setError] = useState<string | null>(null)
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(0)
   const [showBookingCalendar, setShowBookingCalendar] = useState(false)
-  const [selectedDate, setSelectedDate] = useState<Date>()
-  const [selectedTimeSlot, setSelectedTimeSlot] = useState<TimeSlot>()
-  const [showBookingCalendar, setShowBookingCalendar] = useState(false)
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null)
-  const [selectedTimeSlot, setSelectedTimeSlot] = useState<TimeSlot | null>(null)
-  const [showBookingModal, setShowBookingModal] = useState(false)
-  const [showBookingCalendar, setShowBookingCalendar] = useState(false)
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<TimeSlot | null>(null)
   const [showBookingModal, setShowBookingModal] = useState(false)
@@ -57,18 +50,6 @@ export function FieldDetailsScreen({ fieldId }: FieldDetailsScreenProps) {
     }
   }
 
-  const getAmenityIcon = (iconName: string) => {
-    const icons = {
-      'changing-room': Users,
-      'parking': Car,
-      'lightbulb': Lightbulb,
-      'shower': Droplets,
-      'wifi': Wifi,
-      'default': Clock
-    }
-    return icons[iconName as keyof typeof icons] || icons.default
-  }
-
   const formatFieldType = (type: string) => {
     const types = {
       'SOCIETY': 'Society',
@@ -79,113 +60,54 @@ export function FieldDetailsScreen({ fieldId }: FieldDetailsScreenProps) {
     return types[type as keyof typeof types] || type
   }
 
-  const handleBookingClick = () => {
-    // Check if user is logged in
-    const currentUser = localStorage.getItem('currentUser')
-    if (!currentUser) {
-      router.push('/login')
-      return
+  const getAmenityIcon = (iconName?: string) => {
+    const icons = {
+      'wifi': Wifi,
+      'parking': Car,
+      'lighting': Lightbulb,
+      'shower': Droplets,
+      'locker': Users,
+      'default': Clock
     }
-    
+    return icons[iconName as keyof typeof icons] || icons.default
+  }
+
+  const handleBookingClick = () => {
     setShowBookingCalendar(true)
   }
 
   const handleTimeSlotSelect = (date: Date, timeSlot: TimeSlot) => {
     setSelectedDate(date)
     setSelectedTimeSlot(timeSlot)
-  }
-
-  const handleBookingConfirm = () => {
-    if (!selectedDate || !selectedTimeSlot) return
     setShowBookingModal(true)
   }
 
-  const handleBookingSubmit = async (bookingData: BookingFormData) => {
-    if (!selectedDate || !selectedTimeSlot || !field) return
-
-    try {
-      const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}')
-      
-      const bookingId = FieldService.createBooking({
-        fieldId: field.id,
-        timeSlotId: selectedTimeSlot.id,
-        playerName: bookingData.playerName,
-        playerWhatsapp: bookingData.playerWhatsapp,
-        playerEmail: bookingData.playerEmail,
-        date: selectedDate,
-        status: 'CONFIRMED',
-        notes: bookingData.notes,
-        paymentMethod: bookingData.paymentMethod
-      })
-
-      if (bookingId) {
-        setShowBookingModal(false)
-        setShowBookingCalendar(false)
-        setSelectedDate(null)
-        setSelectedTimeSlot(null)
-        
-        // Show success message
-        alert(`Reserva confirmada com sucesso!\n\nID da Reserva: ${bookingId}\nData: ${selectedDate.toLocaleDateString('pt-BR')}\nHorário: ${selectedTimeSlot.startTime} - ${selectedTimeSlot.endTime}\n\nVocê receberá uma confirmação por WhatsApp em breve.`)
-      } else {
-        alert('Erro ao processar reserva. O horário pode não estar mais disponível.')
-      }
-    } catch (error) {
-      console.error('Error creating booking:', error)
-      alert('Erro ao processar reserva. Tente novamente.')
+  const handleProceedToBooking = () => {
+    if (selectedDate && selectedTimeSlot) {
+      setShowBookingModal(true)
     }
   }
 
-  const handleProceedToBooking = () => {
-    if (!selectedDate || !selectedTimeSlot) return
-    setShowBookingModal(true)
-  }
-
-  const handleCloseBookingModal = () => {
-    setShowBookingModal(false)
-  }
-
-  const handleBookingConfirm = (bookingData: BookingFormData) => {
-    handleBookingSubmit(bookingData)
-  }
-    setSelectedDate(date)
-    setSelectedTimeSlot(timeSlot)
-  }
-
-  const handleProceedToBooking = () => {
-    if (!selectedDate || !selectedTimeSlot) return
-    setShowBookingModal(true)
-  }
-
   const handleBookingConfirm = async (bookingData: BookingFormData) => {
-    if (!selectedDate || !selectedTimeSlot || !field) return
-
     try {
-      // Create booking
+      if (!selectedDate || !selectedTimeSlot) {
+        alert('Selecione uma data e horário')
+        return
+      }
+
       const bookingId = FieldService.createBooking({
-        fieldId: field.id,
+        ...bookingData,
+        fieldId: fieldId,
         timeSlotId: selectedTimeSlot.id,
-        playerName: bookingData.playerName,
-        playerWhatsapp: bookingData.playerWhatsapp,
-        playerEmail: bookingData.playerEmail,
         date: selectedDate,
-        status: 'CONFIRMED',
-        field: field,
-        timeSlot: selectedTimeSlot,
-        notes: bookingData.notes,
-        paymentMethod: bookingData.paymentMethod
+        totalPrice: selectedTimeSlot.price,
+        status: 'CONFIRMED'
       })
 
       if (bookingId) {
-        // Close modals and navigate to confirmation
         setShowBookingModal(false)
         setShowBookingCalendar(false)
-        
-        // Navigate to confirmation page
         router.push(`/booking/confirmation/${bookingId}`)
-        
-        // Reset selections
-        setSelectedDate(null)
-        setSelectedTimeSlot(null)
       } else {
         alert('Erro ao criar reserva. Tente novamente.')
       }
@@ -254,11 +176,11 @@ export function FieldDetailsScreen({ fieldId }: FieldDetailsScreenProps) {
   return (
     <div className="bg-slate-800 min-h-screen">
       <StatusBar />
-      
+
       {/* Header */}
       <div className="flex items-center gap-4 px-4 py-4 text-white">
-        <Button 
-          variant="ghost" 
+        <Button
+          variant="ghost"
           size="icon"
           onClick={() => router.back()}
           className="text-white hover:bg-white/10"
@@ -283,7 +205,7 @@ export function FieldDetailsScreen({ fieldId }: FieldDetailsScreenProps) {
               </div>
             )}
           </div>
-          
+
           {field.photos.length > 1 && (
             <div className="p-4">
               <div className="flex gap-2 overflow-x-auto">
@@ -292,8 +214,8 @@ export function FieldDetailsScreen({ fieldId }: FieldDetailsScreenProps) {
                     key={photo.id}
                     onClick={() => setSelectedPhotoIndex(index)}
                     className={`flex-shrink-0 w-16 h-16 rounded-lg border-2 transition ${
-                      selectedPhotoIndex === index 
-                        ? 'border-blue-500' 
+                      selectedPhotoIndex === index
+                        ? 'border-blue-500'
                         : 'border-gray-200'
                     }`}
                   >
@@ -314,7 +236,7 @@ export function FieldDetailsScreen({ fieldId }: FieldDetailsScreenProps) {
               <h2 className="text-2xl font-bold text-slate-800 mb-2">{field.name}</h2>
               <div className="flex items-center gap-2 mb-2">
                 <MapPin className="w-4 h-4 text-slate-500" />
-                <span className="text-slate-600">{field.address}</span>
+                <span className="text-slate-600">{field.location}</span>
               </div>
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-1">
@@ -336,8 +258,6 @@ export function FieldDetailsScreen({ fieldId }: FieldDetailsScreenProps) {
               </div>
             </div>
           </div>
-
-          <p className="text-slate-700 leading-relaxed">{field.description}</p>
         </Card>
 
         {/* Amenities */}
@@ -346,7 +266,7 @@ export function FieldDetailsScreen({ fieldId }: FieldDetailsScreenProps) {
             <h3 className="text-lg font-bold text-slate-800 mb-3">Comodidades</h3>
             <div className="grid grid-cols-2 gap-3">
               {field.amenities.map((amenity) => {
-                const IconComponent = getAmenityIcon(amenity.icon)
+                const IconComponent = getAmenityIcon(amenity.id)
                 return (
                   <div key={amenity.id} className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg">
                     <IconComponent className="w-5 h-5 text-blue-600" />
@@ -358,42 +278,6 @@ export function FieldDetailsScreen({ fieldId }: FieldDetailsScreenProps) {
           </Card>
         )}
 
-        {/* Rules */}
-        {field.rules.length > 0 && (
-          <Card className="bg-white rounded-xl p-4">
-            <h3 className="text-lg font-bold text-slate-800 mb-3">Regras</h3>
-            <ul className="space-y-2">
-              {field.rules.map((rule, index) => (
-                <li key={index} className="flex items-start gap-2">
-                  <span className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></span>
-                  <span className="text-slate-700">{rule}</span>
-                </li>
-              ))}
-            </ul>
-          </Card>
-        )}
-
-        {/* Contact Info */}
-        <Card className="bg-white rounded-xl p-4">
-          <h3 className="text-lg font-bold text-slate-800 mb-3">Contato</h3>
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <Phone className="w-5 h-5 text-blue-600" />
-              <span className="text-slate-700">{field.contactInfo.phone}</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <MessageCircle className="w-5 h-5 text-green-600" />
-              <span className="text-slate-700">{field.contactInfo.whatsapp}</span>
-            </div>
-            {field.contactInfo.email && (
-              <div className="flex items-center gap-3">
-                <Mail className="w-5 h-5 text-red-600" />
-                <span className="text-slate-700">{field.contactInfo.email}</span>
-              </div>
-            )}
-          </div>
-        </Card>
-
         {/* Reviews */}
         {field.reviews.length > 0 && (
           <Card className="bg-white rounded-xl p-4">
@@ -404,20 +288,20 @@ export function FieldDetailsScreen({ fieldId }: FieldDetailsScreenProps) {
                   <div className="flex items-center gap-2 mb-2">
                     <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
                       <span className="text-blue-600 text-sm font-bold">
-                        {review.userName.charAt(0).toUpperCase()}
+                        {review.playerName.charAt(0).toUpperCase()}
                       </span>
                     </div>
                     <div>
-                      <div className="font-medium text-slate-800">{review.userName}</div>
+                      <div className="font-medium text-slate-800">{review.playerName}</div>
                       <div className="flex items-center gap-1">
                         {[...Array(5)].map((_, i) => (
-                          <Star 
-                            key={i} 
+                          <Star
+                            key={i}
                             className={`w-4 h-4 ${
-                              i < review.rating 
-                                ? 'text-yellow-500 fill-current' 
+                              i < review.rating
+                                ? 'text-yellow-500 fill-current'
                                 : 'text-gray-300'
-                            }`} 
+                            }`}
                           />
                         ))}
                       </div>
@@ -437,18 +321,6 @@ export function FieldDetailsScreen({ fieldId }: FieldDetailsScreenProps) {
           </Card>
         )}
 
-        {/* Location Map Placeholder */}
-        <Card className="bg-white rounded-xl p-4">
-          <h3 className="text-lg font-bold text-slate-800 mb-3">Localização</h3>
-          <div className="aspect-video bg-gray-100 rounded-lg flex items-center justify-center">
-            <div className="text-center text-gray-500">
-              <MapPin className="w-12 h-12 mx-auto mb-2" />
-              <p className="text-sm">Mapa será implementado</p>
-              <p className="text-xs">{field.address}</p>
-            </div>
-          </div>
-        </Card>
-
         {/* Booking Calendar */}
         {showBookingCalendar && (
           <div className="space-y-4">
@@ -458,17 +330,17 @@ export function FieldDetailsScreen({ fieldId }: FieldDetailsScreenProps) {
               selectedDate={selectedDate || undefined}
               selectedTimeSlot={selectedTimeSlot || undefined}
             />
-            
+
             {selectedDate && selectedTimeSlot && (
               <div className="flex gap-3">
-                <Button 
+                <Button
                   variant="outline"
                   onClick={() => setShowBookingCalendar(false)}
                   className="flex-1"
                 >
                   Voltar
                 </Button>
-                <Button 
+                <Button
                   onClick={handleProceedToBooking}
                   className="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold"
                 >
@@ -482,7 +354,7 @@ export function FieldDetailsScreen({ fieldId }: FieldDetailsScreenProps) {
         {/* Booking Button */}
         {!showBookingCalendar && (
           <div className="sticky bottom-4">
-            <Button 
+            <Button
               onClick={handleBookingClick}
               className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 text-lg rounded-xl shadow-lg"
             >
