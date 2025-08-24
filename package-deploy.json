@@ -1,18 +1,22 @@
 {
   "name": "arenasobral-modern",
-  "version": "0.1.0",
-  "private": true,
+  "version": "1.0.0",
+  "description": "Plataforma moderna de futebol amador em Sobral",
+  "main": "src/app/page.tsx",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "deploy": "node deploy-auto.js",
+    "deploy-vercel": "vercel --prod --yes"
   },
   "dependencies": {
     "next": "14.2.5",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "typescript": "^5.5.4",
+    "@next/font": "14.2.5",
     "tailwindcss": "^3.4.7",
     "autoprefixer": "^10.4.19",
     "postcss": "^8.4.40",
@@ -22,6 +26,7 @@
     "tailwind-merge": "^2.4.0",
     "lucide-react": "^0.424.0",
     "@radix-ui/react-slot": "^1.1.0",
+    "@radix-ui/react-avatar": "^1.1.0",
     "@radix-ui/react-toast": "^1.2.1",
     "tailwindcss-animate": "^1.0.7"
   },
@@ -31,5 +36,8 @@
     "@types/react-dom": "^18.3.0",
     "eslint": "^8.57.0",
     "eslint-config-next": "14.2.5"
-  }
+  },
+  "keywords": ["futebol", "sobral", "next.js", "typescript", "tailwind"],
+  "author": "ArenaSobral Team",
+  "license": "MIT"
 }

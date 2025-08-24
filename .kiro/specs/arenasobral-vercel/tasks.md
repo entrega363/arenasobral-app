@@ -180,6 +180,7 @@
     - _Requisitos: Design - Tipos de Testes_
 
 
+
 - [ ] 12. Configurar deploy no Vercel
   - [ ] 12.1 Configurar projeto no Vercel
     - Conectar repositório GitHub ao Vercel
