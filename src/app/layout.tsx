@@ -11,16 +11,6 @@ export const metadata: Metadata = {
   description: 'Conectando jogadores, times e areninhas em Sobral, Ceará',
   keywords: ['futebol', 'sobral', 'times', 'jogadores', 'areninha'],
   authors: [{ name: 'ArenaSobral Team' }],
-  viewport: 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no',
-  themeColor: '#1e293b',
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: 'black-translucent',
-    title: 'ArenaSobral'
-  },
-  formatDetection: {
-    telephone: false
-  }
 }
 
 export default function RootLayout({

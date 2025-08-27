@@ -5,6 +5,7 @@ import { User, Users, Calendar, MapPin } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { StatusBar } from '@/components/layout/StatusBar'
+import { AdvertisingBanner } from '@/components/layout/AdvertisingBanner'
 
 export function HomeScreen() {
   const router = useRouter()
@@ -19,22 +20,6 @@ export function HomeScreen() {
       onClick: () => router.push('/login')
     },
     {
-      id: 'searchteams',
-      title: 'Buscar Times',
-      subtitle: '',
-      icon: Calendar,
-      bgColor: 'bg-slate-600',
-      onClick: () => router.push('/search/teams')
-    },
-    {
-      id: 'searchplayers',
-      title: 'Buscar Jogadores',
-      subtitle: '',
-      icon: Users,
-      bgColor: 'bg-blue-500',
-      onClick: () => router.push('/search/players')
-    },
-    {
       id: 'searchfields',
       title: 'Buscar Areninhas',
       subtitle: 'Encontre e reserve horários',
@@ -42,16 +27,29 @@ export function HomeScreen() {
       bgColor: 'bg-green-600',
       onClick: () => router.push('/search/fields')
     },
-
-
-
     {
-      id: 'fieldschedule',
-      title: 'Gerenciar Horários',
-      subtitle: 'Cadastrar horários das quadras',
+      id: 'gamesfeed',
+      title: 'Feed de Jogos',
+      subtitle: 'Veja todos os jogos marcados',
       icon: Calendar,
-      bgColor: 'bg-red-500',
-      onClick: () => router.push('/field/schedule')
+      bgColor: 'bg-purple-500',
+      onClick: () => router.push('/games/feed')
+    },
+    {
+      id: 'viewplayers',
+      title: 'Ver Perfis de Jogadores',
+      subtitle: 'Visualize perfis de jogadores ativos',
+      icon: Users,
+      bgColor: 'bg-indigo-500',
+      onClick: () => router.push('/players')
+    },
+    {
+      id: 'viewteams',
+      title: 'Ver Perfis de Times',
+      subtitle: 'Visualize informações completas dos times',
+      icon: Users,
+      bgColor: 'bg-green-500',
+      onClick: () => router.push('/teams')
     }
   ]
 
@@ -61,6 +59,9 @@ export function HomeScreen() {
       
       <div className="px-6 py-8">
         <h1 className="text-white text-4xl font-bold mb-8">ArenaSobral</h1>
+        
+        {/* Banner de Publicidade */}
+        <AdvertisingBanner />
         
         <div className="space-y-4">
           {menuItems.map((item) => {

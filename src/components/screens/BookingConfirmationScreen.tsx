@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { CheckCircle, Calendar, Clock, MapPin, User, Phone, Mail, CreditCard, Home, FileText } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { StatusBar } from '@/components/layout/StatusBar'
 import { FieldService } from '@/lib/fieldService'
 import { Field, Booking } from '@/types'
 
@@ -140,7 +139,7 @@ export function BookingConfirmationScreen({ bookingId }: BookingConfirmationScre
   if (loading) {
     return (
       <div className="bg-slate-800 min-h-screen">
-        <StatusBar />
+        
         <div className="flex items-center justify-center py-20">
           <div className="text-white text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
@@ -154,7 +153,7 @@ export function BookingConfirmationScreen({ bookingId }: BookingConfirmationScre
   if (error || !booking || !field) {
     return (
       <div className="bg-slate-800 min-h-screen">
-        <StatusBar />
+        
         <div className="px-4 py-8">
           <Card className="bg-red-50 border-red-200 p-6 text-center">
             <p className="text-red-600 mb-4">{error || 'Reserva não encontrada'}</p>
@@ -169,7 +168,7 @@ export function BookingConfirmationScreen({ bookingId }: BookingConfirmationScre
 
   return (
     <div className="bg-slate-800 min-h-screen">
-      <StatusBar />
+      
       
       <div className="px-4 py-8 space-y-6">
         {/* Success Header */}

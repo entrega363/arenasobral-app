@@ -6,6 +6,7 @@ import { ArrowLeft, User, Users, Calendar, MessageSquare, Trophy } from 'lucide-
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { StatusBar } from '@/components/layout/StatusBar'
+import { PlayerAdvertisingBanner } from '@/components/layout/PlayerAdvertisingBanner'
 
 export function PlayerDashboard() {
   const router = useRouter()
@@ -73,8 +74,12 @@ export function PlayerDashboard() {
         <h1 className="text-xl font-bold">Painel do Jogador</h1>
       </div>
 
-      {/* Tabs */}
-      <div className="px-4 mb-6">
+      <div className="px-4 pb-8">
+        {/* Banner de Publicidade */}
+        <PlayerAdvertisingBanner />
+        
+        {/* Tabs */}
+        <div className="px-4 mb-6">
         <div className="flex space-x-1 bg-white/10 rounded-lg p-1">
           {tabs.map((tab) => {
             const IconComponent = tab.icon
