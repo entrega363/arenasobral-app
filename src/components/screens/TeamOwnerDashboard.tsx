@@ -2,14 +2,21 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Users, UserPlus, Calendar, Trophy, MessageSquare } from 'lucide-react'
+import { ArrowLeft, Users, UserPlus, Calendar, Trophy, MessageSquare, Star, Edit3 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { StatusBar } from '@/components/layout/StatusBar'
+import { AdBannerCarousel } from '@/components/ads/AdBannerCarousel'
+import { ScoreInput } from '@/components/games/ScoreInput'
 
 export function TeamOwnerDashboard() {
   const router = useRouter()
   const [selectedTab, setSelectedTab] = useState('overview')
+  const [editingGameId, setEditingGameId] = useState<string | null>(null)
+
+  const handleUploadClick = () => {
+    router.push('/admin/upload-ads')
+  }
 
   const teamStats = {
     playersCount: 15,
@@ -38,7 +45,7 @@ export function TeamOwnerDashboard() {
 
   const upcomingGames = [
     {
-      id: 1,
+      id: '1',
       opponent: 'Amigos da Bola',
       date: 'Amanhã',
       time: '19:00',
@@ -46,12 +53,23 @@ export function TeamOwnerDashboard() {
       status: 'confirmado'
     },
     {
-      id: 2,
+      id: '2',
       opponent: 'Estrela do Norte',
       date: 'Domingo',
       time: '15:00',
       location: 'Quadra Netifor',
       status: 'pendente'
+    },
+    {
+      id: '3',
+      opponent: 'Força Jovem',
+      date: 'Quarta',
+      time: '20:00',
+      location: 'Campo da Cohab',
+      status: 'finalizado',
+      team1Score: 2,
+      team2Score: 1,
+      bestPlayer: 'João Silva'
     }
   ]
 
@@ -61,6 +79,15 @@ export function TeamOwnerDashboard() {
     { id: 'requests', label: 'Solicitações', icon: MessageSquare },
     { id: 'games', label: 'Jogos', icon: Calendar }
   ]
+
+  const handleScoreSubmit = (gameId: string, team1Score: number, team2Score: number) => {
+    // In a real app, this would update the game in the database
+    console.log(`Game ${gameId} score updated: ${team1Score} - ${team2Score}`)
+    setEditingGameId(null)
+    
+    // For demo purposes, we'll just show an alert
+    alert(`Placar registrado: ${team1Score} - ${team2Score}`)
+  }
 
   return (
     <div className="bg-slate-800 min-h-screen">
@@ -76,6 +103,11 @@ export function TeamOwnerDashboard() {
           <ArrowLeft className="w-6 h-6" />
         </Button>
         <h1 className="text-xl font-bold">Painel do Dono do Time</h1>
+      </div>
+
+      {/* Ad Banner Carousel */}
+      <div className="px-4 mb-6">
+        <AdBannerCarousel isAdmin={false} onUpload={handleUploadClick} />
       </div>
 
       {/* Tabs */}
@@ -246,29 +278,79 @@ export function TeamOwnerDashboard() {
             {upcomingGames.map((game) => (
               <Card key={game.id}>
                 <CardContent className="p-4">
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-semibold">vs {game.opponent}</h3>
-                    <span className={`text-xs px-2 py-1 rounded ${
-                      game.status === 'confirmado' 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {game.status}
-                    </span>
-                  </div>
-                  <p className="text-sm text-gray-600 mb-3">
-                    {game.date} às {game.time} • {game.location}
-                  </p>
-                  <div className="flex gap-2">
-                    <Button size="sm" variant="outline" className="flex-1">
-                      Detalhes
-                    </Button>
-                    {game.status === 'pendente' && (
-                      <Button size="sm" className="flex-1">
-                        Confirmar
-                      </Button>
-                    )}
-                  </div>
+                  {game.status === 'finalizado' && game.bestPlayer && (
+                    <div className="bg-yellow-50 border border-yellow-200 rounded p-2 mb-3">
+                      <div className="flex items-center gap-2">
+                        <Star className="w-4 h-4 text-yellow-500 fill-current" />
+                        <span className="text-sm text-yellow-800">
+                          <span className="font-semibold">Melhor da partida:</span> {game.bestPlayer}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {editingGameId === game.id ? (
+                    <ScoreInput
+                      team1Name="Vila Nove F.C."
+                      team2Name={game.opponent}
+                      onScoreSubmit={(team1Score, team2Score) => 
+                        handleScoreSubmit(game.id, team1Score, team2Score)
+                      }
+                      onCancel={() => setEditingGameId(null)}
+                    />
+                  ) : (
+                    <>
+                      <div className="flex justify-between items-start mb-2">
+                        <h3 className="font-semibold">vs {game.opponent}</h3>
+                        <span className={`text-xs px-2 py-1 rounded ${
+                          game.status === 'confirmado' 
+                            ? 'bg-green-100 text-green-800' 
+                            : game.status === 'pendente'
+                            ? 'bg-yellow-100 text-yellow-800'
+                            : 'bg-blue-100 text-blue-800'
+                        }`}>
+                          {game.status === 'confirmado' && 'Confirmado'}
+                          {game.status === 'pendente' && 'Pendente'}
+                          {game.status === 'finalizado' && 'Finalizado'}
+                        </span>
+                      </div>
+                      
+                      {game.status === 'finalizado' && (
+                        <div className="text-center mb-2">
+                          <div className="text-lg font-bold">
+                            {game.team1Score} <span className="text-gray-500">x</span> {game.team2Score}
+                          </div>
+                        </div>
+                      )}
+                      
+                      <p className="text-sm text-gray-600 mb-3">
+                        {game.date} às {game.time} • {game.location}
+                      </p>
+                      
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="outline" className="flex-1">
+                          Detalhes
+                        </Button>
+                        
+                        {game.status === 'confirmado' && (
+                          <Button 
+                            size="sm" 
+                            className="flex-1"
+                            onClick={() => setEditingGameId(game.id)}
+                          >
+                            <Edit3 className="w-4 h-4 mr-1" />
+                            Registrar Placar
+                          </Button>
+                        )}
+                        
+                        {game.status === 'pendente' && (
+                          <Button size="sm" className="flex-1">
+                            Confirmar
+                          </Button>
+                        )}
+                      </div>
+                    </>
+                  )}
                 </CardContent>
               </Card>
             ))}

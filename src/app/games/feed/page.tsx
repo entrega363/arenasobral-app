@@ -2,29 +2,17 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Calendar, Clock, MapPin, Users, Trophy, Search } from 'lucide-react'
+import { ArrowLeft, Calendar, Clock, MapPin, Users, Trophy, Search, Star } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { StatusBar } from '@/components/layout/StatusBar'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { ErrorMessage } from '@/components/ui/ErrorMessage'
-
-interface Game {
-  id: string
-  team1: {
-    id: string
-    name: string
-  }
-  team2: {
-    id: string
-    name: string
-  }
-  date: string
-  time: string
-  location: string
-  status: 'CONFIRMED' | 'PENDING' | 'CANCELED'
-  type: 'FRIENDLY' | 'TOURNAMENT' | 'LEAGUE'
-}
+import { AdBannerCarousel } from '@/components/ads/AdBannerCarousel'
+import { ScoreInput } from '@/components/games/ScoreInput'
+import { BestPlayerVoting } from '@/components/games/BestPlayerVoting'
+import { BestPlayerDisplay } from '@/components/games/BestPlayerDisplay'
+import { Game, Player } from '@/types/game'
 
 export default function GamesFeedPage() {
   const router = useRouter()
@@ -33,6 +21,8 @@ export default function GamesFeedPage() {
   const [games, setGames] = useState<Game[]>([])
   const [filter, setFilter] = useState<'all' | 'upcoming' | 'past'>('upcoming')
   const [searchTerm, setSearchTerm] = useState('')
+  const [editingGameId, setEditingGameId] = useState<string | null>(null)
+  const [votingGameId, setVotingGameId] = useState<string | null>(null)
 
   useEffect(() => {
     loadData()
@@ -100,17 +90,27 @@ export default function GamesFeedPage() {
           id: '4',
           team1: {
             id: '2',
-            name: 'Amigos da Bola'
+            name: 'Amigos da Bola',
+            score: 2
           },
           team2: {
             id: '3',
-            name: 'Estrela do Norte'
+            name: 'Estrela do Norte',
+            score: 1
           },
           date: '2024-08-24',
           time: '20:00',
           location: 'Quadra Netifor',
-          status: 'CONFIRMED',
-          type: 'LEAGUE'
+          status: 'FINISHED',
+          type: 'LEAGUE',
+          bestPlayer: {
+            id: 'player1',
+            name: 'João Silva',
+            position: 'Atacante',
+            teamId: '2',
+            teamName: 'Amigos da Bola',
+            rating: 4.8
+          }
         }
       ]
 
@@ -120,6 +120,67 @@ export default function GamesFeedPage() {
       console.error('Error loading data:', err)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleUploadClick = () => {
+    router.push('/admin/upload-ads')
+  }
+
+  const handleScoreSubmit = (gameId: string, team1Score: number, team2Score: number) => {
+    setGames(prevGames => 
+      prevGames.map(game => 
+        game.id === gameId 
+          ? { 
+              ...game, 
+              team1: { ...game.team1, score: team1Score },
+              team2: { ...game.team2, score: team2Score },
+              status: 'FINISHED'
+            }
+          : game
+      )
+    )
+    setEditingGameId(null)
+  }
+
+  const handleStartVoting = (gameId: string) => {
+    // In a real app, this would set a 10-minute timer
+    const votingEndTime = new Date(Date.now() + 10 * 60 * 1000).toISOString()
+    
+    setGames(prevGames => 
+      prevGames.map(game => 
+        game.id === gameId 
+          ? { ...game, votingEndTime }
+          : game
+      )
+    )
+    setVotingGameId(gameId)
+  }
+
+  const handleVote = (gameId: string, playerId: string) => {
+    // In a real app, this would send the vote to the server
+    console.log(`Voted for player ${playerId} in game ${gameId}`)
+    
+    // For demo purposes, we'll just set a best player
+    const game = games.find(g => g.id === gameId)
+    if (game) {
+      const mockPlayer: Player = {
+        id: playerId,
+        name: 'João Silva',
+        position: 'Atacante',
+        teamId: game.team1.id,
+        teamName: game.team1.name,
+        rating: 4.8
+      }
+      
+      setGames(prevGames => 
+        prevGames.map(g => 
+          g.id === gameId 
+            ? { ...g, bestPlayer: mockPlayer }
+            : g
+        )
+      )
+      setVotingGameId(null)
     }
   }
 
@@ -159,6 +220,8 @@ export default function GamesFeedPage() {
         return 'bg-yellow-100 text-yellow-800'
       case 'CANCELED':
         return 'bg-red-100 text-red-800'
+      case 'FINISHED':
+        return 'bg-blue-100 text-blue-800'
       default:
         return 'bg-gray-100 text-gray-800'
     }
@@ -243,6 +306,11 @@ export default function GamesFeedPage() {
       </div>
 
       <div className="px-4 pb-8">
+        {/* Ad Banner Carousel */}
+        <div className="mb-6">
+          <AdBannerCarousel isAdmin={false} onUpload={handleUploadClick} />
+        </div>
+        
         {/* Search and Filters */}
         <div className="mb-6 space-y-4">
           {/* Search Bar */}
@@ -311,47 +379,142 @@ export default function GamesFeedPage() {
           ) : (
             <div className="space-y-4">
               {filteredGames.map((game) => (
-                <Card key={game.id} className="bg-white">
-                  <div className="p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(game.status)}`}>
-                          {game.status === 'CONFIRMED' && 'Confirmado'}
-                          {game.status === 'PENDING' && 'Pendente'}
-                          {game.status === 'CANCELED' && 'Cancelado'}
-                        </span>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getTypeColor(game.type)}`}>
-                          {game.type === 'FRIENDLY' && 'Amistoso'}
-                          {game.type === 'TOURNAMENT' && 'Torneio'}
-                          {game.type === 'LEAGUE' && 'Liga'}
-                        </span>
+                <div key={game.id}>
+                  {/* Best Player Display */}
+                  {game.bestPlayer && (
+                    <BestPlayerDisplay 
+                      player={game.bestPlayer}
+                      gameId={game.id}
+                      gameInfo={`${game.team1.name} ${game.team1.score || 0} x ${game.team2.score || 0} ${game.team2.name}`}
+                    />
+                  )}
+                  
+                  <Card className="bg-white">
+                    <div className="p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(game.status)}`}>
+                            {game.status === 'CONFIRMED' && 'Confirmado'}
+                            {game.status === 'PENDING' && 'Pendente'}
+                            {game.status === 'CANCELED' && 'Cancelado'}
+                            {game.status === 'FINISHED' && 'Finalizado'}
+                          </span>
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getTypeColor(game.type)}`}>
+                            {game.type === 'FRIENDLY' && 'Amistoso'}
+                            {game.type === 'TOURNAMENT' && 'Torneio'}
+                            {game.type === 'LEAGUE' && 'Liga'}
+                          </span>
+                        </div>
+                        
+                        {game.status === 'CONFIRMED' && (
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => setEditingGameId(game.id)}
+                          >
+                            Registrar Placar
+                          </Button>
+                        )}
+                      </div>
+                      
+                      {/* Score Input Form */}
+                      {editingGameId === game.id && (
+                        <ScoreInput
+                          team1Name={game.team1.name}
+                          team2Name={game.team2.name}
+                          onScoreSubmit={(team1Score, team2Score) => 
+                            handleScoreSubmit(game.id, team1Score, team2Score)
+                          }
+                          onCancel={() => setEditingGameId(null)}
+                        />
+                      )}
+                      
+                      {/* Best Player Voting */}
+                      {game.status === 'FINISHED' && !game.bestPlayer && votingGameId === game.id && (
+                        <BestPlayerVoting
+                          gameId={game.id}
+                          players={[
+                            {
+                              id: 'player1',
+                              name: 'João Silva',
+                              position: 'Atacante',
+                              teamId: game.team1.id,
+                              teamName: game.team1.name,
+                              rating: 4.8
+                            },
+                            {
+                              id: 'player2',
+                              name: 'Pedro Santos',
+                              position: 'Meio-campo',
+                              teamId: game.team1.id,
+                              teamName: game.team1.name,
+                              rating: 4.6
+                            },
+                            {
+                              id: 'player3',
+                              name: 'Carlos Lima',
+                              position: 'Zagueiro',
+                              teamId: game.team2.id,
+                              teamName: game.team2.name,
+                              rating: 4.7
+                            },
+                            {
+                              id: 'player4',
+                              name: 'Felipe Costa',
+                              position: 'Goleiro',
+                              teamId: game.team2.id,
+                              teamName: game.team2.name,
+                              rating: 4.9
+                            }
+                          ]}
+                          onVote={(playerId) => handleVote(game.id, playerId)}
+                          isVotingActive={true}
+                        />
+                      )}
+                      
+                      {/* Start Voting Button */}
+                      {game.status === 'FINISHED' && !game.bestPlayer && !votingGameId && (
+                        <Button 
+                          size="sm" 
+                          className="mb-4"
+                          onClick={() => handleStartVoting(game.id)}
+                        >
+                          <Star className="w-4 h-4 mr-2" />
+                          Iniciar Votação do Melhor Jogador
+                        </Button>
+                      )}
+                      
+                      <div className="text-center mb-4">
+                        <div className="flex items-center justify-center gap-2 mb-2">
+                          <span className="font-bold text-slate-800">{game.team1.name}</span>
+                          <span className="text-slate-500">
+                            {game.team1.score !== undefined ? game.team1.score : '?'}
+                          </span>
+                          <span className="text-slate-500">vs</span>
+                          <span className="text-slate-500">
+                            {game.team2.score !== undefined ? game.team2.score : '?'}
+                          </span>
+                          <span className="font-bold text-slate-800">{game.team2.name}</span>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2 text-sm text-slate-600">
+                        <div className="flex items-center gap-2">
+                          <Calendar className="w-4 h-4" />
+                          <span>{new Date(game.date).toLocaleDateString('pt-BR')}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Clock className="w-4 h-4" />
+                          <span>{game.time}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <MapPin className="w-4 h-4" />
+                          <span>{game.location}</span>
+                        </div>
                       </div>
                     </div>
-                    
-                    <div className="text-center mb-4">
-                      <div className="flex items-center justify-center gap-2 mb-2">
-                        <span className="font-bold text-slate-800">{game.team1.name}</span>
-                        <span className="text-slate-500">vs</span>
-                        <span className="font-bold text-slate-800">{game.team2.name}</span>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2 text-sm text-slate-600">
-                      <div className="flex items-center gap-2">
-                        <Calendar className="w-4 h-4" />
-                        <span>{new Date(game.date).toLocaleDateString('pt-BR')}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Clock className="w-4 h-4" />
-                        <span>{game.time}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <MapPin className="w-4 h-4" />
-                        <span>{game.location}</span>
-                      </div>
-                    </div>
-                  </div>
-                </Card>
+                  </Card>
+                </div>
               ))}
             </div>
           )}

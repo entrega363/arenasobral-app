@@ -536,122 +536,17 @@ export default function AdminDashboardPage() {
               Gerenciamento de Banner de Publicidade
             </h2>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Upload Form */}
-              <div>
-                <h3 className="font-semibold text-lg mb-3">Adicionar Nova Imagem</h3>
-                
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm text-slate-600 mb-2">Título da Imagem</label>
-                    <input
-                      type="text"
-                      value={newImageTitle}
-                      onChange={(e) => setNewImageTitle(e.target.value)}
-                      className="w-full px-4 py-3 bg-white rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Ex: Promoção de Verão 2025"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm text-slate-600 mb-2">Imagem</label>
-                    <input
-                      type="file"
-                      ref={fileInputRef}
-                      onChange={handleImageUpload}
-                      accept="image/*"
-                      className="hidden"
-                    />
-                    
-                    {previewUrl ? (
-                      <div className="relative">
-                        <img 
-                          src={previewUrl} 
-                          alt="Preview" 
-                          className="w-full h-32 object-cover rounded-lg border border-gray-200"
-                        />
-                        <Button
-                          size="icon"
-                          variant="destructive"
-                          className="absolute top-2 right-2 w-8 h-8 rounded-full"
-                          onClick={() => {
-                            setPreviewUrl(null)
-                            if (fileInputRef.current) {
-                              fileInputRef.current.value = ''
-                            }
-                          }}
-                        >
-                          <X className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    ) : (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="w-full h-32 border-2 border-dashed border-gray-300 flex flex-col items-center justify-center gap-2 hover:border-blue-400"
-                        onClick={triggerFileSelect}
-                      >
-                        <Upload className="w-8 h-8 text-gray-400" />
-                        <span className="text-gray-600">Clique para selecionar uma imagem</span>
-                        <span className="text-sm text-gray-500">(JPG, PNG, WEBP)</span>
-                      </Button>
-                    )}
-                  </div>
-                  
-                  <Button
-                    className="w-full bg-blue-500 hover:bg-blue-600 text-white"
-                    onClick={saveBannerImage}
-                    disabled={uploading || !previewUrl || !newImageTitle.trim()}
-                  >
-                    {uploading ? (
-                      <LoadingSpinner size="sm" variant="white" />
-                    ) : (
-                      <>
-                        <Upload className="w-4 h-4 mr-2" />
-                        Adicionar Imagem
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </div>
-              
-              {/* Current Images */}
-              <div>
-                <h3 className="font-semibold text-lg mb-3">Imagens Atuais ({bannerImages.length})</h3>
-                
-                {bannerImages.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
-                    <Image className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                    <p>Nenhuma imagem cadastrada</p>
-                  </div>
-                ) : (
-                  <div className="space-y-3 max-h-96 overflow-y-auto">
-                    {bannerImages.map((image) => (
-                      <div key={image.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                        <img 
-                          src={image.url} 
-                          alt={image.title} 
-                          className="w-16 h-16 object-cover rounded-lg"
-                        />
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-sm truncate">{image.title}</p>
-                          <p className="text-xs text-gray-500 truncate">
-                            {new URL(image.url).hostname}
-                          </p>
-                        </div>
-                        <Button
-                          size="icon"
-                          variant="destructive"
-                          className="w-8 h-8"
-                          onClick={() => removeBannerImage(image.id)}
-                        >
-                          <X className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-slate-600">
+                Gerencie as imagens exibidas no carrossel de propagandas
+              </p>
+              <Button
+                onClick={() => router.push('/admin/ads')}
+                className="bg-blue-500 hover:bg-blue-600 text-white"
+              >
+                <Image className="w-4 h-4 mr-2" />
+                Gerenciar Propagandas
+              </Button>
             </div>
           </Card>
 

@@ -8,6 +8,7 @@ import { Card } from '@/components/ui/card'
 import { StatusBar } from '@/components/layout/StatusBar'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { ErrorMessage } from '@/components/ui/ErrorMessage'
+import { AdBannerCarousel } from '@/components/ads/AdBannerCarousel'
 
 interface Player {
   id: string
@@ -134,6 +135,10 @@ export default function PlayersPage() {
     }
   }
 
+  const handleUploadClick = () => {
+    router.push('/admin/upload-ads')
+  }
+
   const filteredPlayers = players.filter(player => {
     const matchesSearch = 
       player.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -214,6 +219,11 @@ export default function PlayersPage() {
       </div>
 
       <div className="px-4 pb-8">
+        {/* Ad Banner Carousel */}
+        <div className="mb-6">
+          <AdBannerCarousel isAdmin={false} onUpload={handleUploadClick} />
+        </div>
+        
         {/* Search and Filters */}
         <div className="mb-6 space-y-4">
           {/* Search Bar */}

@@ -13,6 +13,7 @@ import { ErrorMessage } from '@/components/ui/ErrorMessage'
 import { SkeletonCard } from '@/components/ui/SkeletonCard'
 import { ResponsiveLayout } from '@/components/layout/ResponsiveLayout'
 import { MobileSearchInput } from '@/components/ui/MobileSearchInput'
+import { AdBannerCarousel } from '@/components/ads/AdBannerCarousel'
 import { FieldService } from '@/lib/fieldService'
 import { Field, FieldFilters } from '@/types'
 import { useResponsive } from '@/hooks/useResponsive'
@@ -69,6 +70,10 @@ export function SearchFieldsScreen() {
     router.push(`/search/fields/${fieldId}`)
   }
 
+  const handleUploadClick = () => {
+    router.push('/admin/upload-ads')
+  }
+
   const clearFilters = () => {
     setFilters({})
     setSearchTerm('')
@@ -123,6 +128,11 @@ export function SearchFieldsScreen() {
       showBackButton={true}
       showBottomNav={true}
     >
+      {/* Ad Banner Carousel */}
+      <div className="px-4 pt-4">
+        <AdBannerCarousel isAdmin={false} onUpload={handleUploadClick} />
+      </div>
+      
       {/* Search and Filter Bar */}
       <MobileSearchInput
         value={searchTerm}

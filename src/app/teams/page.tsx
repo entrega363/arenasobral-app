@@ -8,6 +8,7 @@ import { Card } from '@/components/ui/card'
 import { StatusBar } from '@/components/layout/StatusBar'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { ErrorMessage } from '@/components/ui/ErrorMessage'
+import { AdBannerCarousel } from '@/components/ads/AdBannerCarousel'
 
 interface Team {
   id: string
@@ -146,6 +147,10 @@ export default function TeamsPage() {
     }
   }
 
+  const handleUploadClick = () => {
+    router.push('/admin/upload-ads')
+  }
+
   const filteredTeams = teams.filter(team => {
     const matchesSearch = 
       team.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -226,6 +231,11 @@ export default function TeamsPage() {
       </div>
 
       <div className="px-4 pb-8">
+        {/* Ad Banner Carousel */}
+        <div className="mb-6">
+          <AdBannerCarousel isAdmin={false} onUpload={handleUploadClick} />
+        </div>
+        
         {/* Search and Filters */}
         <div className="mb-6 space-y-4">
           {/* Search Bar */}

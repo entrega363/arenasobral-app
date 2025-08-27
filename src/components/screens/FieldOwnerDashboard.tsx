@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { StatusBar } from '@/components/layout/StatusBar'
 import { FieldManagement } from '@/components/fields/FieldManagement'
 import { FieldBookingsView } from '@/components/fields/FieldBookingsView'
+import { AdBannerCarousel } from '@/components/ads/AdBannerCarousel'
 import { formatCurrency } from '@/lib/utils'
 import { Field } from '@/types'
 
@@ -16,6 +17,10 @@ export function FieldOwnerDashboard() {
   const [selectedTab, setSelectedTab] = useState('overview')
   const [selectedField, setSelectedField] = useState<Field | null>(null)
   const [showFieldBookings, setShowFieldBookings] = useState(false)
+
+  const handleUploadClick = () => {
+    router.push('/admin/upload-ads')
+  }
 
   const fieldStats = {
     totalBookings: 45,
@@ -94,6 +99,11 @@ export function FieldOwnerDashboard() {
           <ArrowLeft className="w-6 h-6" />
         </Button>
         <h1 className="text-xl font-bold">Painel da Areninha</h1>
+      </div>
+
+      {/* Ad Banner Carousel */}
+      <div className="px-4 mb-6">
+        <AdBannerCarousel isAdmin={false} onUpload={handleUploadClick} />
       </div>
 
       {/* Tabs */}
