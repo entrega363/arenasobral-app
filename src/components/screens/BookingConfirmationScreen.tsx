@@ -299,7 +299,7 @@ export function BookingConfirmationScreen({ bookingId }: BookingConfirmationScre
         <div className="space-y-3">
           <Button
             onClick={handleShareBooking}
-            className="w-full bg-green-500 hover:bg-green-600 text-white font-medium py-3"
+            className="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-3"
           >
             Compartilhar Reserva
           </Button>

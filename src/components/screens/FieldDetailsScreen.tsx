@@ -341,7 +341,7 @@ export function FieldDetailsScreen({ fieldId }: FieldDetailsScreenProps) {
                 </Button>
                 <Button
                   onClick={handleProceedToBooking}
-                  className="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold"
+                  className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-bold"
                 >
                   Confirmar Reserva
                 </Button>

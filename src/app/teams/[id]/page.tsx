@@ -367,7 +367,7 @@ export default function TeamProfilePage() {
         {/* Actions */}
         <div className="space-y-3">
           <Button 
-            className="w-full bg-green-500 hover:bg-green-600"
+            className="w-full bg-blue-500 hover:bg-blue-600"
             onClick={() => alert('Função de contato em breve disponível')}
           >
             Entrar em Contato

@@ -242,7 +242,7 @@ export default function ScheduleGamePage() {
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      <Button size="sm" className="flex-1 bg-green-500 hover:bg-green-600">
+                      <Button size="sm" className="flex-1 bg-blue-500 hover:bg-blue-600">
                         Aceitar
                       </Button>
                       <Button size="sm" variant="outline" className="flex-1">

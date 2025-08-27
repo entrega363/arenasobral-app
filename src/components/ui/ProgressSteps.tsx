@@ -36,10 +36,10 @@ export function ProgressSteps({
     switch (status) {
       case 'completed':
         return {
-          circle: 'bg-green-500 border-green-500 text-white',
-          title: 'text-green-600 font-medium',
-          description: 'text-green-500',
-          connector: 'bg-green-500'
+          circle: 'bg-blue-500 border-blue-500 text-white',
+          title: 'text-blue-600 font-medium',
+          description: 'text-blue-500',
+          connector: 'bg-blue-500'
         }
       case 'current':
         return {
@@ -73,7 +73,7 @@ export function ProgressSteps({
                   <div
                     key={index}
                     className={`w-2 h-2 rounded-full transition-colors ${
-                      status === 'completed' ? 'bg-green-500' :
+                      status === 'completed' ? 'bg-blue-500' :
                       status === 'current' ? 'bg-blue-500' : 'bg-gray-300'
                     }`}
                   />

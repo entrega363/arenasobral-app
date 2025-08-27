@@ -48,7 +48,7 @@ export function HomeScreen() {
       title: 'Ver Perfis de Times',
       subtitle: 'Visualize informações completas dos times',
       icon: Users,
-      bgColor: 'bg-green-500',
+      bgColor: 'bg-blue-500',
       onClick: () => router.push('/teams')
     }
   ]

@@ -686,7 +686,7 @@ export default function AdminDashboardPage() {
                         {user.status !== 'active' && (
                           <Button 
                             size="sm" 
-                            className="bg-green-500 hover:bg-green-600 text-white"
+                            className="bg-blue-500 hover:bg-blue-600 text-white"
                             onClick={() => handleActivateUser(user.id)}
                           >
                             <CheckCircle className="w-4 h-4 mr-2" />

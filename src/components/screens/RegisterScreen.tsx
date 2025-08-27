@@ -305,7 +305,7 @@ export default function RegisterScreen() {
 
           <Button 
             onClick={handleRegister}
-            className="w-full bg-green-600 hover:bg-green-700"
+            className="w-full bg-blue-500 text-white font-medium py-3 rounded-lg mb-4 hover:bg-blue-600 transition"
           >
             Criar Conta Grátis
           </Button>
