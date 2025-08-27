@@ -4,6 +4,7 @@ export default function Home() {
       <h1>Arena Sobral App</h1>
       <p>Bem-vindo ao Arena Sobral!</p>
       <p>Este projeto está conectado ao Vercel e pronto para edição.</p>
+      <p>✅ Teste de deploy automático - {new Date().toLocaleString('pt-BR')}</p>
     </main>
   )
 }
