@@ -82,6 +82,10 @@ export function TeamOwnerDashboard() {
         { id: 'p3', name: 'Pedro Santos', position: 'Zagueiro', teamId: 't1', teamName: 'Vila Nove F.C.', rating: 4.3 },
         { id: 'p4', name: 'Felipe Costa', position: 'Goleiro', teamId: 't1', teamName: 'Vila Nove F.C.', rating: 4.7 },
         { id: 'p5', name: 'Ricardo Oliveira', position: 'Lateral', teamId: 't1', teamName: 'Vila Nove F.C.', rating: 4.2 }
+      ],
+      goals: [ // Adicionando gols marcados
+        { playerId: 'p1', playerName: 'João Silva', goals: 2 },
+        { playerId: 'p3', playerName: 'Pedro Santos', goals: 1 }
       ]
     }
   ]
@@ -93,7 +97,7 @@ export function TeamOwnerDashboard() {
     { id: 'games', label: 'Jogos', icon: Calendar }
   ]
 
-  const handleScoreSubmit = (gameId: string, team1Score: number, team2Score: number) => {
+  const handleScoreSubmit = (gameId: string, team1Score: number, team2Score: number, team1Goals: any[], team2Goals: any[]) => {
     // In a real app, this would update the game in the database
     console.log(`Game ${gameId} score updated: ${team1Score} - ${team2Score}`);
     setEditingGameId(null);
@@ -107,12 +111,16 @@ export function TeamOwnerDashboard() {
       setTeamStats(prev => ({ ...prev, draws: prev.draws + 1 }));
     }
     
-    // Atualizar estatísticas dos jogadores com base no resultado
+    // Atualizar estatísticas dos jogadores com base nos gols marcados
     console.log(`Atualizando estatísticas dos jogadores do time após o resultado: ${team1Score} - ${team2Score}`);
+    console.log('Gols marcados pelo time 1:', team1Goals);
+    console.log('Gols marcados pelo time 2:', team2Goals);
+    
     // Em uma aplicação real, isso atualizaria o perfil de cada jogador do time
+    // Por exemplo: incrementar player.stats.goals para cada jogador que marcou
     
     // For demo purposes, we'll just show an alert
-    alert(`Placar registrado: ${team1Score} - ${team2Score}\nEstatísticas atualizadas automaticamente!`);
+    alert(`Placar registrado: ${team1Score} - ${team2Score}\nEstatísticas atualizadas automaticamente!\nGols registrados para os jogadores.`);
   }
 
   return (
@@ -340,8 +348,10 @@ export function TeamOwnerDashboard() {
                     <ScoreInput
                       team1Name="Vila Nove F.C."
                       team2Name={game.opponent}
-                      onScoreSubmit={(team1Score, team2Score) => 
-                        handleScoreSubmit(game.id, team1Score, team2Score)
+                      team1Players={game.players}
+                      team2Players={[]} // Em uma aplicação real, isso viria da API
+                      onScoreSubmit={(team1Score, team2Score, team1Goals, team2Goals) => 
+                        handleScoreSubmit(game.id, team1Score, team2Score, team1Goals, team2Goals)
                       }
                       onCancel={() => setEditingGameId(null)}
                     />
@@ -366,6 +376,21 @@ export function TeamOwnerDashboard() {
                         <div className="text-center mb-2">
                           <div className="text-lg font-bold">
                             {game.team1Score} <span className="text-gray-500">x</span> {game.team2Score}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Exibir gols marcados */}
+                      {game.status === 'finalizado' && game.goals && game.goals.length > 0 && (
+                        <div className="mb-3 p-3 bg-gray-50 rounded">
+                          <h4 className="font-medium text-sm mb-2">Gols Marcados:</h4>
+                          <div className="space-y-1">
+                            {game.goals.map((goal, index) => (
+                              <div key={index} className="flex justify-between text-xs">
+                                <span>{goal.playerName}</span>
+                                <span className="font-medium">{goal.goals} gol{goal.goals !== 1 ? 's' : ''}</span>
+                              </div>
+                            ))}
                           </div>
                         </div>
                       )}

@@ -28,20 +28,20 @@ interface Player {
   achievements?: string[]
   stats?: {
     gamesPlayed: number
-    goals: number
+    goals: number // Gols marcados
     assists: number
     cleanSheets?: number
     bestPlayerAwards?: number
-    wins?: number // Adicionando vitórias
-    draws?: number // Adicionando empates
-    losses?: number // Adicionando derrotas
+    wins?: number // Vitórias
+    draws?: number // Empates
+    losses?: number // Derrotas
   }
-  gameHistory?: { // Adicionando histórico de jogos
+  gameHistory?: { // Histórico de jogos
     gameId: string
     date: string
     opponent: string
     result: 'win' | 'draw' | 'loss'
-    goalsScored: number
+    goalsScored: number // Gols marcados neste jogo
     assistsMade: number
     minutesPlayed: number
     rating: number
@@ -89,20 +89,20 @@ export default function PlayerProfilePage() {
         ],
         stats: {
           gamesPlayed: 45,
-          goals: 28,
+          goals: 28, // Gols marcados
           assists: 12,
-          bestPlayerAwards: 8, // Adicionando contagem de prêmios de melhor jogador
-          wins: 28, // Adicionando vitórias
-          draws: 10, // Adicionando empates
-          losses: 7 // Adicionando derrotas
+          bestPlayerAwards: 8, // Prêmios de melhor jogador
+          wins: 28, // Vitórias
+          draws: 10, // Empates
+          losses: 7 // Derrotas
         },
-        gameHistory: [ // Adicionando histórico de jogos
+        gameHistory: [ // Histórico de jogos
           {
             gameId: '1',
             date: '20/08/2025',
             opponent: 'Amigos da Bola',
             result: 'win',
-            goalsScored: 2,
+            goalsScored: 2, // Gols marcados neste jogo
             assistsMade: 1,
             minutesPlayed: 90,
             rating: 8.5
@@ -112,7 +112,7 @@ export default function PlayerProfilePage() {
             date: '15/08/2025',
             opponent: 'Estrela do Norte',
             result: 'draw',
-            goalsScored: 1,
+            goalsScored: 1, // Gols marcados neste jogo
             assistsMade: 0,
             minutesPlayed: 90,
             rating: 7.0
@@ -122,7 +122,7 @@ export default function PlayerProfilePage() {
             date: '10/08/2025',
             opponent: 'União FC',
             result: 'win',
-            goalsScored: 1,
+            goalsScored: 1, // Gols marcados neste jogo
             assistsMade: 2,
             minutesPlayed: 90,
             rating: 8.0
@@ -279,7 +279,7 @@ export default function PlayerProfilePage() {
                   <div className="text-sm text-gray-600">Jogos</div>
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-green-600">{player.stats.goals}</div>
+                  <div className="text-2xl font-bold text-green-600">{player.stats.goals}</div> {/* Gols marcados */}
                   <div className="text-sm text-gray-600">Gols</div>
                 </div>
                 <div>
