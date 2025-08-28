@@ -207,6 +207,7 @@ export interface TeamFormData {
 export interface FieldFormData {
   name: string
   location: string
+  photo?: string // Adicionando campo para foto da arena
 }
 
 export interface TimeSlotFormData {

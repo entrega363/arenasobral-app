@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Plus, Edit, Trash2, MapPin, DollarSign, Clock, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Field, FieldFormData } from '@/types'
 import { FieldService } from '@/lib/fieldService'
 
@@ -18,7 +18,8 @@ export function FieldManagement({ onFieldSelect }: FieldManagementProps) {
   const [editingField, setEditingField] = useState<Field | null>(null)
   const [formData, setFormData] = useState<FieldFormData>({
     name: '',
-    location: ''
+    location: '',
+    photo: '' // Adicionando campo para foto da arena
   })
 
   useEffect(() => {
@@ -49,7 +50,7 @@ export function FieldManagement({ onFieldSelect }: FieldManagementProps) {
   const handleAddField = () => {
     setShowAddForm(true)
     setEditingField(null)
-    setFormData({ name: '', location: '' })
+    setFormData({ name: '', location: '', photo: '' }) // Inicializando com campo de foto vazio
   }
 
   const handleEditField = (field: Field) => {
@@ -57,7 +58,8 @@ export function FieldManagement({ onFieldSelect }: FieldManagementProps) {
     setShowAddForm(true)
     setFormData({
       name: field.name,
-      location: field.location
+      location: field.location,
+      photo: field.photos && field.photos.length > 0 ? field.photos[0].url : '' // Preenche a foto se existir
     })
   }
 
@@ -78,7 +80,12 @@ export function FieldManagement({ onFieldSelect }: FieldManagementProps) {
         const allFields = FieldService.getAllFields()
         const updatedFields = allFields.map(field => 
           field.id === editingField.id 
-            ? { ...field, name: formData.name, location: formData.location }
+            ? { 
+                ...field, 
+                name: formData.name, 
+                location: formData.location,
+                ...(formData.photo && { photo: formData.photo }) // Atualiza a foto se fornecida
+              }
             : field
         )
         localStorage.setItem('arenasobral_fields', JSON.stringify(updatedFields))
@@ -95,7 +102,7 @@ export function FieldManagement({ onFieldSelect }: FieldManagementProps) {
           rating: 0,
           ownerId: user.email,
           owner: {} as any,
-          photos: [],
+          photos: formData.photo ? [{ id: '1', url: formData.photo, alt: formData.name, isPrimary: true }] : [], // Adiciona foto se fornecida
           amenities: [
             { id: '1', name: 'Vestiário', icon: 'changing-room' },
             { id: '2', name: 'Estacionamento', icon: 'parking' }
@@ -179,52 +186,91 @@ export function FieldManagement({ onFieldSelect }: FieldManagementProps) {
         </Button>
       </div>
 
-      {/* Add/Edit Form */}
-      {showAddForm && (
-        <Card className="bg-white p-4">
-          <h3 className="font-bold text-slate-800 mb-4">
-            {editingField ? 'Editar Areninha' : 'Nova Areninha'}
-          </h3>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                Nome da Areninha *
-              </label>
-              <input
-                type="text"
-                value={formData.name}
-                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Ex: Arena Central"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                Localização *
-              </label>
-              <input
-                type="text"
-                value={formData.location}
-                onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Ex: Centro, Sobral"
-              />
-            </div>
-            <div className="flex gap-2">
-              <Button onClick={handleSaveField} className="flex-1 bg-blue-500 hover:bg-blue-600">
-                {editingField ? 'Atualizar' : 'Adicionar'}
-              </Button>
-              <Button 
-                onClick={() => setShowAddForm(false)} 
-                variant="outline" 
-                className="flex-1"
-              >
-                Cancelar
-              </Button>
-            </div>
-          </div>
-        </Card>
-      )}
+      {/* Add/Edit Field Form */}
+        {showAddForm && (
+          <Card className="bg-white mb-6">
+            <CardContent className="p-4">
+              <h3 className="font-semibold text-lg mb-4">
+                {editingField ? 'Editar Areninha' : 'Adicionar Nova Areninha'}
+              </h3>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Nome da Areninha *
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.name}
+                    onChange={(e) => setFormData({...formData, name: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Ex: Arena Sobral Central"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Localização *
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.location}
+                    onChange={(e) => setFormData({...formData, location: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Ex: Sobral Centro"
+                  />
+                </div>
+                
+                {/* Campo para foto da arena */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Foto da Arena (URL)
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.photo || ''}
+                    onChange={(e) => setFormData({...formData, photo: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Cole a URL da foto da sua arena"
+                  />
+                  {formData.photo && (
+                    <div className="mt-2">
+                      <p className="text-sm text-gray-600 mb-1">Pré-visualização:</p>
+                      <img 
+                        src={formData.photo} 
+                        alt="Pré-visualização da arena" 
+                        className="w-32 h-32 object-cover rounded-md border"
+                        onError={(e) => {
+                          e.currentTarget.src = 'https://placehold.co/300x200?text=Imagem+não+disponível'
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+                
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={handleSaveField}
+                    className="flex-1"
+                  >
+                    Salvar
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setShowAddForm(false)
+                      setEditingField(null)
+                      setFormData({ name: '', location: '', photo: '' })
+                    }}
+                    className="flex-1"
+                  >
+                    Cancelar
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
       {/* Fields List */}
       {fields.length === 0 ? (
