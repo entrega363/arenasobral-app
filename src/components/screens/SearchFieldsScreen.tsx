@@ -128,8 +128,14 @@ export function SearchFieldsScreen() {
       showBackButton={true}
       showBottomNav={true}
     >
-      {/* Ad Banner Carousel */}
+      {/* Header with enhanced title */}
       <div className="px-4 pt-4">
+        <div className="text-center mb-4">
+          <h1 className="text-2xl font-bold text-white">Buscar Areninhas</h1>
+          <p className="text-slate-300 text-sm">Encontre e reserve quadras esportivas próximas a você</p>
+        </div>
+        
+        {/* Ad Banner Carousel */}
         <AdBannerCarousel isAdmin={false} onUpload={handleUploadClick} />
       </div>
       
