@@ -430,6 +430,16 @@ export function TeamOwnerDashboard() {
                               onVote={(playerId) => {
                                 // Em uma aplicação real, isso seria enviado para o servidor
                                 console.log(`Voto registrado para o jogador ${playerId} no jogo ${game.id}`)
+                                
+                                // Atualizar a contagem de vezes que o jogador foi eleito o melhor da partida
+                                const player = game.players.find(p => p.id === playerId);
+                                if (player) {
+                                  console.log(`Jogador ${player.name} foi eleito o melhor da partida!`);
+                                  // Em uma aplicação real, isso seria salvo no perfil do jogador
+                                  // Por exemplo: incrementar player.stats.bestPlayerAwards
+                                  alert(`Jogador ${player.name} foi eleito o melhor da partida!`);
+                                }
+                                
                                 setVotedGames(prev => ({ ...prev, [game.id]: playerId }))
                                 alert('Voto registrado! Obrigado por participar.')
                               }}

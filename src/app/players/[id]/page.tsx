@@ -31,6 +31,7 @@ interface Player {
     goals: number
     assists: number
     cleanSheets?: number
+    bestPlayerAwards?: number // Adicionando contagem de prêmios de melhor jogador
   }
 }
 
@@ -76,7 +77,8 @@ export default function PlayerProfilePage() {
         stats: {
           gamesPlayed: 45,
           goals: 28,
-          assists: 12
+          assists: 12,
+          bestPlayerAwards: 8 // Adicionando contagem de prêmios de melhor jogador
         }
       }
 
@@ -223,7 +225,7 @@ export default function PlayerProfilePage() {
           <Card className="bg-white mb-6">
             <div className="p-4">
               <h3 className="font-semibold text-lg mb-3">Estatísticas</h3>
-              <div className="grid grid-cols-3 gap-4 text-center">
+              <div className="grid grid-cols-4 gap-4 text-center">
                 <div>
                   <div className="text-2xl font-bold text-blue-600">{player.stats.gamesPlayed}</div>
                   <div className="text-sm text-gray-600">Jogos</div>
@@ -236,6 +238,12 @@ export default function PlayerProfilePage() {
                   <div className="text-2xl font-bold text-purple-600">{player.stats.assists}</div>
                   <div className="text-sm text-gray-600">Assist.</div>
                 </div>
+                {player.stats.bestPlayerAwards !== undefined && (
+                  <div>
+                    <div className="text-2xl font-bold text-yellow-600">{player.stats.bestPlayerAwards}</div>
+                    <div className="text-sm text-gray-600">Melhor</div>
+                  </div>
+                )}
               </div>
             </div>
           </Card>
