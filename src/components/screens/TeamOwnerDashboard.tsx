@@ -181,6 +181,18 @@ export function TeamOwnerDashboard() {
                 Marcar Jogo
               </Button>
             </div>
+
+            {/* Search Fields Button */}
+            <Card>
+              <CardContent className="p-4">
+                <Button 
+                  className="w-full"
+                  onClick={() => router.push('/search/fields')}
+                >
+                  Buscar Areninhas
+                </Button>
+              </CardContent>
+            </Card>
           </div>
         )}
 
