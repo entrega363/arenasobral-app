@@ -107,6 +107,10 @@ export function TeamOwnerDashboard() {
       setTeamStats(prev => ({ ...prev, draws: prev.draws + 1 }));
     }
     
+    // Atualizar estatísticas dos jogadores com base no resultado
+    console.log(`Atualizando estatísticas dos jogadores do time após o resultado: ${team1Score} - ${team2Score}`);
+    // Em uma aplicação real, isso atualizaria o perfil de cada jogador do time
+    
     // For demo purposes, we'll just show an alert
     alert(`Placar registrado: ${team1Score} - ${team2Score}\nEstatísticas atualizadas automaticamente!`);
   }

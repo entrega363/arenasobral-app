@@ -25,6 +25,9 @@ export function ScoreInput({ team1Name, team2Name, onScoreSubmit, onCancel }: Sc
       return
     }
     
+    // Atualizar estatísticas dos jogadores dos times com base no resultado
+    console.log(`Atualizando estatísticas dos jogadores após o resultado: ${team1Name} ${score1} x ${score2} ${team2Name}`)
+    
     onScoreSubmit(score1, score2)
   }
 

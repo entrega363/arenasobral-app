@@ -31,8 +31,21 @@ interface Player {
     goals: number
     assists: number
     cleanSheets?: number
-    bestPlayerAwards?: number // Adicionando contagem de prêmios de melhor jogador
+    bestPlayerAwards?: number
+    wins?: number // Adicionando vitórias
+    draws?: number // Adicionando empates
+    losses?: number // Adicionando derrotas
   }
+  gameHistory?: { // Adicionando histórico de jogos
+    gameId: string
+    date: string
+    opponent: string
+    result: 'win' | 'draw' | 'loss'
+    goalsScored: number
+    assistsMade: number
+    minutesPlayed: number
+    rating: number
+  }[]
 }
 
 export default function PlayerProfilePage() {
@@ -78,8 +91,43 @@ export default function PlayerProfilePage() {
           gamesPlayed: 45,
           goals: 28,
           assists: 12,
-          bestPlayerAwards: 8 // Adicionando contagem de prêmios de melhor jogador
-        }
+          bestPlayerAwards: 8, // Adicionando contagem de prêmios de melhor jogador
+          wins: 28, // Adicionando vitórias
+          draws: 10, // Adicionando empates
+          losses: 7 // Adicionando derrotas
+        },
+        gameHistory: [ // Adicionando histórico de jogos
+          {
+            gameId: '1',
+            date: '20/08/2025',
+            opponent: 'Amigos da Bola',
+            result: 'win',
+            goalsScored: 2,
+            assistsMade: 1,
+            minutesPlayed: 90,
+            rating: 8.5
+          },
+          {
+            gameId: '2',
+            date: '15/08/2025',
+            opponent: 'Estrela do Norte',
+            result: 'draw',
+            goalsScored: 1,
+            assistsMade: 0,
+            minutesPlayed: 90,
+            rating: 7.0
+          },
+          {
+            gameId: '3',
+            date: '10/08/2025',
+            opponent: 'União FC',
+            result: 'win',
+            goalsScored: 1,
+            assistsMade: 2,
+            minutesPlayed: 90,
+            rating: 8.0
+          }
+        ]
       }
 
       setPlayer(mockPlayer)
@@ -245,6 +293,33 @@ export default function PlayerProfilePage() {
                   </div>
                 )}
               </div>
+              
+              {/* Vitórias, Empates e Derrotas */}
+              {(player.stats.wins !== undefined || player.stats.draws !== undefined || player.stats.losses !== undefined) && (
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <h4 className="font-medium text-center mb-3">Resultado dos Jogos</h4>
+                  <div className="grid grid-cols-3 gap-4">
+                    {player.stats.wins !== undefined && (
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-green-600">{player.stats.wins}</div>
+                        <div className="text-sm text-gray-600">Vitórias</div>
+                      </div>
+                    )}
+                    {player.stats.draws !== undefined && (
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-blue-600">{player.stats.draws}</div>
+                        <div className="text-sm text-gray-600">Empates</div>
+                      </div>
+                    )}
+                    {player.stats.losses !== undefined && (
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-red-600">{player.stats.losses}</div>
+                        <div className="text-sm text-gray-600">Derrotas</div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </Card>
         )}
@@ -262,6 +337,45 @@ export default function PlayerProfilePage() {
                   <div key={index} className="flex items-center gap-2">
                     <Trophy className="w-4 h-4 text-yellow-500" />
                     <span className="text-sm">{achievement}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Card>
+        )}
+
+        {/* Game History */}
+        {player.gameHistory && player.gameHistory.length > 0 && (
+          <Card className="bg-white mb-6">
+            <div className="p-4">
+              <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
+                <Calendar className="w-5 h-5 text-blue-600" />
+                Histórico de Jogos
+              </h3>
+              <div className="space-y-3">
+                {player.gameHistory.map((game) => (
+                  <div key={game.gameId} className="flex items-center justify-between p-3 bg-gray-50 rounded">
+                    <div>
+                      <p className="font-medium text-sm">{game.opponent}</p>
+                      <p className="text-xs text-gray-600">{game.date}</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="text-right">
+                        <div className="text-sm font-medium">
+                          {game.goalsScored} gol{game.goalsScored !== 1 ? 's' : ''} • {game.assistsMade} assist.
+                        </div>
+                        <div className="text-xs text-gray-600">
+                          {game.minutesPlayed} min
+                        </div>
+                      </div>
+                      <span className={`px-2 py-1 rounded text-xs font-medium ${
+                        game.result === 'win' ? 'bg-green-100 text-green-800' :
+                        game.result === 'draw' ? 'bg-blue-100 text-blue-800' :
+                        'bg-red-100 text-red-800'
+                      }`}>
+                        {game.result === 'win' ? 'Vitória' : game.result === 'draw' ? 'Empate' : 'Derrota'}
+                      </span>
+                    </div>
                   </div>
                 ))}
               </div>
