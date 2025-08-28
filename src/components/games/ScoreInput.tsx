@@ -26,6 +26,9 @@ export function ScoreInput({ team1Name, team2Name, team1Players = [], team2Playe
   const validTeam1Players = Array.isArray(team1Players) ? team1Players : [];
   const validTeam2Players = Array.isArray(team2Players) ? team2Players : [];
   
+  console.log('ScoreInput received team1Players:', validTeam1Players);
+  console.log('ScoreInput received team2Players:', validTeam2Players);
+  
   const [team1Score, setTeam1Score] = useState('')
   const [team2Score, setTeam2Score] = useState('')
   const [team1Goals, setTeam1Goals] = useState<GoalScorer[]>([])
