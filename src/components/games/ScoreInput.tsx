@@ -15,13 +15,17 @@ interface GoalScorer {
 interface ScoreInputProps {
   team1Name: string
   team2Name: string
-  team1Players: { id: string; name: string }[]
-  team2Players: { id: string; name: string }[]
-  onScoreSubmit: (team1Score: number, team2Score: number, team1Goals: GoalScorer[], team2Goals: GoalScorer[]) => void
+  team1Players?: { id: string; name: string }[]
+  team2Players?: { id: string; name: string }[]
+  onScoreSubmit: (team1Score: number, team2Score: number, team1Goals?: GoalScorer[], team2Goals?: GoalScorer[]) => void
   onCancel: () => void
 }
 
-export function ScoreInput({ team1Name, team2Name, team1Players, team2Players, onScoreSubmit, onCancel }: ScoreInputProps) {
+export function ScoreInput({ team1Name, team2Name, team1Players = [], team2Players = [], onScoreSubmit, onCancel }: ScoreInputProps) {
+  // Garantir que os dados dos jogadores estão no formato correto
+  const validTeam1Players = Array.isArray(team1Players) ? team1Players : [];
+  const validTeam2Players = Array.isArray(team2Players) ? team2Players : [];
+  
   const [team1Score, setTeam1Score] = useState('')
   const [team2Score, setTeam2Score] = useState('')
   const [team1Goals, setTeam1Goals] = useState<GoalScorer[]>([])
@@ -59,7 +63,7 @@ export function ScoreInput({ team1Name, team2Name, team1Players, team2Players, o
       return
     }
     
-    const player = team1Players.find(p => p.id === newTeam1Scorer.playerId)
+    const player = validTeam1Players.find(p => p.id === newTeam1Scorer.playerId)
     if (!player) return
     
     const existingScorer = team1Goals.find(scorer => scorer.playerId === newTeam1Scorer.playerId)
@@ -87,7 +91,7 @@ export function ScoreInput({ team1Name, team2Name, team1Players, team2Players, o
       return
     }
     
-    const player = team2Players.find(p => p.id === newTeam2Scorer.playerId)
+    const player = validTeam2Players.find(p => p.id === newTeam2Scorer.playerId)
     if (!player) return
     
     const existingScorer = team2Goals.find(scorer => scorer.playerId === newTeam2Scorer.playerId)
@@ -160,7 +164,7 @@ export function ScoreInput({ team1Name, team2Name, team1Players, team2Players, o
             className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm"
           >
             <option value="">Selecione um jogador</option>
-            {team1Players.map(player => (
+            {validTeam1Players.map(player => (
               <option key={player.id} value={player.id}>{player.name}</option>
             ))}
           </select>
@@ -211,7 +215,7 @@ export function ScoreInput({ team1Name, team2Name, team1Players, team2Players, o
             className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm"
           >
             <option value="">Selecione um jogador</option>
-            {team2Players.map(player => (
+            {validTeam2Players.map(player => (
               <option key={player.id} value={player.id}>{player.name}</option>
             ))}
           </select>

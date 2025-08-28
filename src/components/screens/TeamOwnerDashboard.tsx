@@ -348,10 +348,10 @@ export function TeamOwnerDashboard() {
                     <ScoreInput
                       team1Name="Vila Nove F.C."
                       team2Name={game.opponent}
-                      team1Players={game.players}
+                      team1Players={game.players || []}
                       team2Players={[]} // Em uma aplicação real, isso viria da API
                       onScoreSubmit={(team1Score, team2Score, team1Goals, team2Goals) => 
-                        handleScoreSubmit(game.id, team1Score, team2Score, team1Goals, team2Goals)
+                        handleScoreSubmit(game.id, team1Score, team2Score, team1Goals || [], team2Goals || [])
                       }
                       onCancel={() => setEditingGameId(null)}
                     />
