@@ -58,7 +58,10 @@ export function HomeScreen() {
       <StatusBar />
       
       <div className="px-6 py-8">
-        <h1 className="text-white text-4xl font-bold mb-8">ArenaSobral</h1>
+        <div className="text-center mb-8">
+          <h1 className="text-white text-4xl font-bold">ArenaSobral</h1>
+          <p className="text-slate-300 mt-2">Sua plataforma para reservar areninhas e organizar jogos</p>
+        </div>
         
         {/* Banner de Publicidade */}
         <AdvertisingBanner />
