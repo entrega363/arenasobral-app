@@ -77,11 +77,11 @@ export function TeamOwnerDashboard() {
       bestPlayer: 'João Silva',
       createdByTeam: 'Vila Nove F.C.', // Time que marcou o jogo
       players: [
-        { id: 'p1', name: 'João Silva', position: 'Atacante', teamName: 'Vila Nove F.C.' },
-        { id: 'p2', name: 'Carlos Mendes', position: 'Meio-campo', teamName: 'Vila Nove F.C.' },
-        { id: 'p3', name: 'Pedro Santos', position: 'Zagueiro', teamName: 'Vila Nove F.C.' },
-        { id: 'p4', name: 'Felipe Costa', position: 'Goleiro', teamName: 'Vila Nove F.C.' },
-        { id: 'p5', name: 'Ricardo Oliveira', position: 'Lateral', teamName: 'Vila Nove F.C.' }
+        { id: 'p1', name: 'João Silva', position: 'Atacante', teamId: 't1', teamName: 'Vila Nove F.C.', rating: 4.8 },
+        { id: 'p2', name: 'Carlos Mendes', position: 'Meio-campo', teamId: 't1', teamName: 'Vila Nove F.C.', rating: 4.5 },
+        { id: 'p3', name: 'Pedro Santos', position: 'Zagueiro', teamId: 't1', teamName: 'Vila Nove F.C.', rating: 4.3 },
+        { id: 'p4', name: 'Felipe Costa', position: 'Goleiro', teamId: 't1', teamName: 'Vila Nove F.C.', rating: 4.7 },
+        { id: 'p5', name: 'Ricardo Oliveira', position: 'Lateral', teamId: 't1', teamName: 'Vila Nove F.C.', rating: 4.2 }
       ]
     }
   ]
