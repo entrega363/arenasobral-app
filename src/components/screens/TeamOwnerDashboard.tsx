@@ -16,17 +16,17 @@ export function TeamOwnerDashboard() {
   const [selectedTab, setSelectedTab] = useState('overview')
   const [editingGameId, setEditingGameId] = useState<string | null>(null)
   const [votedGames, setVotedGames] = useState<Record<string, string>>({}) // gameId: playerId
-
-  const handleUploadClick = () => {
-    router.push('/admin/upload-ads')
-  }
-
-  const teamStats = {
+  const [teamStats, setTeamStats] = useState({
     playersCount: 15,
     nextGame: 'Amanhã às 19:00 vs Amigos da Bola',
     pendingRequests: 2,
     wins: 8,
-    losses: 3
+    losses: 3,
+    draws: 2 // Adicionando empates
+  })
+
+  const handleUploadClick = () => {
+    router.push('/admin/upload-ads')
   }
 
   const recentRequests = [
@@ -95,11 +95,20 @@ export function TeamOwnerDashboard() {
 
   const handleScoreSubmit = (gameId: string, team1Score: number, team2Score: number) => {
     // In a real app, this would update the game in the database
-    console.log(`Game ${gameId} score updated: ${team1Score} - ${team2Score}`)
-    setEditingGameId(null)
+    console.log(`Game ${gameId} score updated: ${team1Score} - ${team2Score}`);
+    setEditingGameId(null);
+    
+    // Atualizar as estatísticas do time com base no resultado
+    if (team1Score > team2Score) {
+      setTeamStats(prev => ({ ...prev, wins: prev.wins + 1 }));
+    } else if (team1Score < team2Score) {
+      setTeamStats(prev => ({ ...prev, losses: prev.losses + 1 }));
+    } else {
+      setTeamStats(prev => ({ ...prev, draws: prev.draws + 1 }));
+    }
     
     // For demo purposes, we'll just show an alert
-    alert(`Placar registrado: ${team1Score} - ${team2Score}`)
+    alert(`Placar registrado: ${team1Score} - ${team2Score}\nEstatísticas atualizadas automaticamente!`);
   }
 
   return (
@@ -158,17 +167,23 @@ export function TeamOwnerDashboard() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 gap-4 mb-4">
+                <div className="grid grid-cols-3 gap-4 mb-4">
                   <div>
-                    <div className="text-2xl font-bold text-green-600">{teamStats.playersCount}</div>
-                    <div className="text-sm text-gray-600">Jogadores</div>
+                    <div className="text-2xl font-bold text-green-600">{teamStats.wins}</div>
+                    <div className="text-sm text-gray-600">Vitórias</div>
                   </div>
                   <div>
-                    <div className="text-2xl font-bold text-blue-600">{teamStats.pendingRequests}</div>
-                    <div className="text-sm text-gray-600">Solicitações</div>
+                    <div className="text-2xl font-bold text-red-600">{teamStats.losses}</div>
+                    <div className="text-sm text-gray-600">Derrotas</div>
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-blue-600">{teamStats.draws}</div>
+                    <div className="text-sm text-gray-600">Empates</div>
                   </div>
                 </div>
                 <div className="space-y-2">
+                  <p><strong>Jogadores:</strong> {teamStats.playersCount}</p>
+                  <p><strong>Solicitações:</strong> {teamStats.pendingRequests}</p>
                   <p><strong>Próximo Jogo:</strong> {teamStats.nextGame}</p>
                   <p><strong>Categoria:</strong> Racha</p>
                   <p><strong>Localização:</strong> Sobral Centro</p>
