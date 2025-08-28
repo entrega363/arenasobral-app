@@ -172,6 +172,9 @@ export function TeamOwnerDashboard() {
                   <p><strong>Próximo Jogo:</strong> {teamStats.nextGame}</p>
                   <p><strong>Categoria:</strong> Racha</p>
                   <p><strong>Localização:</strong> Sobral Centro</p>
+                  <p><strong>Técnico:</strong> Carlos Mendes</p>
+                  <p><strong>Presidente:</strong> João Silva</p>
+                  <p><strong>Fundado em:</strong> 2015</p>
                 </div>
               </CardContent>
             </Card>
