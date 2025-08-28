@@ -8,11 +8,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { StatusBar } from '@/components/layout/StatusBar'
 import { AdBannerCarousel } from '@/components/ads/AdBannerCarousel'
 import { ScoreInput } from '@/components/games/ScoreInput'
+import { BestPlayerVoting } from '@/components/games/BestPlayerVoting'
+import { BestPlayerDisplay } from '@/components/games/BestPlayerDisplay'
 
 export function TeamOwnerDashboard() {
   const router = useRouter()
   const [selectedTab, setSelectedTab] = useState('overview')
   const [editingGameId, setEditingGameId] = useState<string | null>(null)
+  const [votedGames, setVotedGames] = useState<Record<string, string>>({}) // gameId: playerId
 
   const handleUploadClick = () => {
     router.push('/admin/upload-ads')
@@ -50,7 +53,8 @@ export function TeamOwnerDashboard() {
       date: 'Amanhã',
       time: '19:00',
       location: 'Campo do Centro',
-      status: 'confirmado'
+      status: 'confirmado',
+      createdByTeam: 'Vila Nove F.C.' // Time que marcou o jogo
     },
     {
       id: '2',
@@ -58,7 +62,8 @@ export function TeamOwnerDashboard() {
       date: 'Domingo',
       time: '15:00',
       location: 'Quadra Netifor',
-      status: 'pendente'
+      status: 'pendente',
+      createdByTeam: 'Vila Nove F.C.' // Time que marcou o jogo
     },
     {
       id: '3',
@@ -69,7 +74,15 @@ export function TeamOwnerDashboard() {
       status: 'finalizado',
       team1Score: 2,
       team2Score: 1,
-      bestPlayer: 'João Silva'
+      bestPlayer: 'João Silva',
+      createdByTeam: 'Vila Nove F.C.', // Time que marcou o jogo
+      players: [
+        { id: 'p1', name: 'João Silva', position: 'Atacante', teamName: 'Vila Nove F.C.' },
+        { id: 'p2', name: 'Carlos Mendes', position: 'Meio-campo', teamName: 'Vila Nove F.C.' },
+        { id: 'p3', name: 'Pedro Santos', position: 'Zagueiro', teamName: 'Vila Nove F.C.' },
+        { id: 'p4', name: 'Felipe Costa', position: 'Goleiro', teamName: 'Vila Nove F.C.' },
+        { id: 'p5', name: 'Ricardo Oliveira', position: 'Lateral', teamName: 'Vila Nove F.C.' }
+      ]
     }
   ]
 
@@ -344,11 +357,23 @@ export function TeamOwnerDashboard() {
                           Detalhes
                         </Button>
                         
-                        {game.status === 'confirmado' && (
+                        {game.status === 'confirmado' && game.createdByTeam === 'Vila Nove F.C.' && (
                           <Button 
                             size="sm" 
                             className="flex-1"
                             onClick={() => setEditingGameId(game.id)}
+                          >
+                            <Edit3 className="w-4 h-4 mr-1" />
+                            Registrar Placar
+                          </Button>
+                        )}
+                        
+                        {game.status === 'confirmado' && game.createdByTeam !== 'Vila Nove F.C.' && (
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            className="flex-1"
+                            disabled
                           >
                             <Edit3 className="w-4 h-4 mr-1" />
                             Registrar Placar
@@ -361,6 +386,50 @@ export function TeamOwnerDashboard() {
                           </Button>
                         )}
                       </div>
+                      
+                      {/* Mensagem de permissão */}
+                      {game.status === 'confirmado' && game.createdByTeam !== 'Vila Nove F.C.' && (
+                        <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded text-center">
+                          <p className="text-sm text-yellow-800">
+                            ⚠️ Apenas o time que marcou este jogo ({game.createdByTeam}) pode registrar o placar.
+                          </p>
+                        </div>
+                      )}
+                      
+                      {/* Votação para melhor jogador - somente para jogos finalizados */}
+                      {game.status === 'finalizado' && game.team1Score && game.team2Score && (
+                        <>
+                          {game.bestPlayer ? (
+                            <BestPlayerDisplay 
+                              player={game.players.find(p => p.name === game.bestPlayer) || game.players[0]}
+                              gameId={game.id}
+                              gameInfo={`Vila Nove F.C. ${game.team1Score} x ${game.team2Score} ${game.opponent}`}
+                            />
+                          ) : (
+                            <BestPlayerVoting
+                              gameId={game.id}
+                              players={game.players}
+                              onVote={(playerId) => {
+                                // Em uma aplicação real, isso seria enviado para o servidor
+                                console.log(`Voto registrado para o jogador ${playerId} no jogo ${game.id}`)
+                                setVotedGames(prev => ({ ...prev, [game.id]: playerId }))
+                                alert('Voto registrado! Obrigado por participar.')
+                              }}
+                              isVotingActive={game.createdByTeam === 'Vila Nove F.C.'}
+                              currentVote={votedGames[game.id]}
+                            />
+                          )}
+                        </>
+                      )}
+                      
+                      {/* Verificação de permissão para registrar placar e votar */}
+                      {game.status === 'finalizado' && !game.team1Score && !game.team2Score && (
+                        <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded text-center">
+                          <p className="text-sm text-yellow-800">
+                            ⚠️ Apenas o time que marcou este jogo pode registrar o placar e iniciar a votação.
+                          </p>
+                        </div>
+                      )}
                     </>
                   )}
                 </CardContent>
