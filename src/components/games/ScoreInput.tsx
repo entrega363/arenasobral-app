@@ -46,7 +46,17 @@ export function ScoreInput({ team1Name, team2Name, team1Players = [], team2Playe
     const totalTeam1Goals = team1Goals.reduce((sum, scorer) => sum + scorer.goals, 0)
     const totalTeam2Goals = team2Goals.reduce((sum, scorer) => sum + scorer.goals, 0)
     
-    if (totalTeam1Goals !== score1 || totalTeam2Goals !== score2) {
+    // Se não houver gols registrados, permitir o envio (placar 0x0 ou quando o usuário optar por não registrar gols)
+    if (totalTeam1Goals === 0 && totalTeam2Goals === 0 && (score1 > 0 || score2 > 0)) {
+      const confirmNoGoals = window.confirm(
+        `Você não registrou nenhum gol marcado. Tem certeza que deseja confirmar o placar ${score1} x ${score2} sem registrar os artilheiros?`
+      )
+      if (!confirmNoGoals) {
+        return
+      }
+    } 
+    // Se houver gols registrados, verificar se a soma corresponde ao placar
+    else if (totalTeam1Goals !== score1 || totalTeam2Goals !== score2) {
       alert(`A soma dos gols registrados (${totalTeam1Goals} e ${totalTeam2Goals}) não corresponde ao placar (${score1} e ${score2}).`)
       return
     }
