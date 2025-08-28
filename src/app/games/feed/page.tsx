@@ -9,7 +9,6 @@ import { StatusBar } from '@/components/layout/StatusBar'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { ErrorMessage } from '@/components/ui/ErrorMessage'
 import { AdBannerCarousel } from '@/components/ads/AdBannerCarousel'
-import { ScoreInput } from '@/components/games/ScoreInput'
 import { BestPlayerVoting } from '@/components/games/BestPlayerVoting'
 import { BestPlayerDisplay } from '@/components/games/BestPlayerDisplay'
 import { Game, Player } from '@/types/game'
@@ -21,7 +20,6 @@ export default function GamesFeedPage() {
   const [games, setGames] = useState<Game[]>([])
   const [filter, setFilter] = useState<'all' | 'upcoming' | 'past'>('upcoming')
   const [searchTerm, setSearchTerm] = useState('')
-  const [editingGameId, setEditingGameId] = useState<string | null>(null)
   const [votingGameId, setVotingGameId] = useState<string | null>(null)
 
   useEffect(() => {
@@ -125,22 +123,6 @@ export default function GamesFeedPage() {
 
   const handleUploadClick = () => {
     router.push('/admin/upload-ads')
-  }
-
-  const handleScoreSubmit = (gameId: string, team1Score: number, team2Score: number) => {
-    setGames(prevGames => 
-      prevGames.map(game => 
-        game.id === gameId 
-          ? { 
-              ...game, 
-              team1: { ...game.team1, score: team1Score },
-              team2: { ...game.team2, score: team2Score },
-              status: 'FINISHED'
-            }
-          : game
-      )
-    )
-    setEditingGameId(null)
   }
 
   const handleStartVoting = (gameId: string) => {
@@ -405,29 +387,7 @@ export default function GamesFeedPage() {
                             {game.type === 'LEAGUE' && 'Liga'}
                           </span>
                         </div>
-                        
-                        {game.status === 'CONFIRMED' && (
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => setEditingGameId(game.id)}
-                          >
-                            Registrar Placar
-                          </Button>
-                        )}
                       </div>
-                      
-                      {/* Score Input Form */}
-                      {editingGameId === game.id && (
-                        <ScoreInput
-                          team1Name={game.team1.name}
-                          team2Name={game.team2.name}
-                          onScoreSubmit={(team1Score, team2Score) => 
-                            handleScoreSubmit(game.id, team1Score, team2Score)
-                          }
-                          onCancel={() => setEditingGameId(null)}
-                        />
-                      )}
                       
                       {/* Best Player Voting */}
                       {game.status === 'FINISHED' && !game.bestPlayer && votingGameId === game.id && (
