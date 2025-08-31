@@ -32,6 +32,7 @@ export interface Game {
     teamName: string;
     count: number;
   }[];
+  votingStartTime?: string; // ISO string
   votingEndTime?: string; // ISO string
 }
 
