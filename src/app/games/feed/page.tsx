@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Calendar, Clock, MapPin, Users, Trophy, Search, Star } from 'lucide-react'
+import { ArrowLeft, Calendar, Clock, MapPin, Users, Trophy, Search, Star, MessageSquare } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { StatusBar } from '@/components/layout/StatusBar'
@@ -11,6 +11,7 @@ import { ErrorMessage } from '@/components/ui/ErrorMessage'
 import { AdBannerCarousel } from '@/components/ads/AdBannerCarousel'
 import { BestPlayerVoting } from '@/components/games/BestPlayerVoting'
 import { BestPlayerDisplay } from '@/components/games/BestPlayerDisplay'
+import { VotingTimer } from '@/components/ui/VotingTimer'
 import { Game, Player } from '@/types/game'
 
 export default function GamesFeedPage() {
@@ -26,6 +27,23 @@ export default function GamesFeedPage() {
     loadData()
   }, [])
 
+  // Efeito para iniciar votação automática para jogos finalizados
+  useEffect(() => {
+    if (games.length > 0 && !loading) {
+      // Procurar por jogos finalizados sem votação iniciada
+      const finishedGames = games.filter(game => 
+        game.status === 'FINISHED' && 
+        !game.votingStartTime && 
+        !game.bestPlayer
+      )
+      
+      // Iniciar votação automática para o primeiro jogo finalizado encontrado
+      if (finishedGames.length > 0 && !votingGameId) {
+        startAutomaticVoting(finishedGames[0].id)
+      }
+    }
+  }, [games, loading, votingGameId])
+
   const loadData = async () => {
     try {
       setLoading(true)
@@ -34,7 +52,7 @@ export default function GamesFeedPage() {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000))
 
-      // Mock data for games
+      // Mock data for games feed
       const mockGames: Game[] = [
         {
           id: '1',
@@ -108,7 +126,51 @@ export default function GamesFeedPage() {
             teamId: '2',
             teamName: 'Amigos da Bola',
             rating: 4.8
-          }
+          },
+          votingStartTime: new Date().toISOString(),
+          votingEndTime: new Date(Date.now() + 10 * 60 * 1000).toISOString()
+        },
+        {
+          id: '5',
+          team1: {
+            id: '1',
+            name: 'Vila Nove F.C.',
+            score: 3
+          },
+          team2: {
+            id: '5',
+            name: 'Força Jovem',
+            score: 2
+          },
+          date: '2024-08-23',
+          time: '19:30',
+          location: 'Campo do Centro',
+          status: 'FINISHED',
+          type: 'FRIENDLY',
+          // Este jogo não tem bestPlayer ainda, então deve iniciar votação automática
+          votingStartTime: undefined,
+          votingEndTime: undefined
+        },
+        {
+          id: '6',
+          team1: {
+            id: '4',
+            name: 'União FC',
+            score: 1
+          },
+          team2: {
+            id: '2',
+            name: 'Amigos da Bola',
+            score: 1
+          },
+          date: '2024-08-22',
+          time: '18:00',
+          location: 'Quadra Netifor',
+          status: 'FINISHED',
+          type: 'TOURNAMENT',
+          // Este jogo não tem bestPlayer ainda, então deve iniciar votação automática
+          votingStartTime: undefined,
+          votingEndTime: undefined
         }
       ]
 
@@ -139,13 +201,34 @@ export default function GamesFeedPage() {
     setVotingGameId(gameId)
   }
 
+  // Função para iniciar votação automaticamente para jogos finalizados
+  const startAutomaticVoting = (gameId: string) => {
+    // Verificar se a votação já foi iniciada para este jogo
+    const game = games.find(g => g.id === gameId)
+    if (game && game.status === 'FINISHED' && !game.votingStartTime && !game.bestPlayer) {
+      // Iniciar votação automaticamente
+      const votingStartTime = new Date().toISOString()
+      const votingEndTime = new Date(Date.now() + 10 * 60 * 1000).toISOString() // 10 minutos
+      
+      setGames(prevGames => 
+        prevGames.map(g => 
+          g.id === gameId 
+            ? { ...g, votingStartTime, votingEndTime }
+            : g
+        )
+      )
+      setVotingGameId(gameId)
+    }
+  }
+
   const handleVote = (gameId: string, playerId: string) => {
     // In a real app, this would send the vote to the server
     console.log(`Voted for player ${playerId} in game ${gameId}`)
     
-    // For demo purposes, we'll just set a best player
+    // Atualizar o jogo com o jogador eleito como melhor da partida
     const game = games.find(g => g.id === gameId)
     if (game) {
+      // Mock player data for demonstration
       const mockPlayer: Player = {
         id: playerId,
         name: 'João Silva',
@@ -162,7 +245,12 @@ export default function GamesFeedPage() {
             : g
         )
       )
+      
       setVotingGameId(null)
+      
+      // Atualizar estatísticas do jogador (em uma aplicação real, isso seria salvo no banco de dados)
+      console.log(`Updating player ${playerId} statistics with best player award`)
+      alert(`Jogador ${mockPlayer.name} foi eleito o melhor da partida! Suas estatísticas foram atualizadas.`)
     }
   }
 
@@ -429,6 +517,7 @@ export default function GamesFeedPage() {
                           ]}
                           onVote={(playerId) => handleVote(game.id, playerId)}
                           isVotingActive={true}
+                          votingEndTime={game.votingEndTime}
                         />
                       )}
                       
@@ -442,6 +531,24 @@ export default function GamesFeedPage() {
                           <Star className="w-4 h-4 mr-2" />
                           Iniciar Votação do Melhor Jogador
                         </Button>
+                      )}
+                      
+                      {/* Voting Timer Display */}
+                      {game.status === 'FINISHED' && !game.bestPlayer && votingGameId === game.id && game.votingEndTime && (
+                        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded text-center">
+                          <div className="flex items-center justify-center gap-2 mb-1">
+                            <Clock className="w-4 h-4 text-blue-600" />
+                            <span className="text-sm font-medium text-blue-800">
+                              Tempo restante para votação:
+                            </span>
+                          </div>
+                          <div className="text-lg font-bold text-blue-600">
+                            <VotingTimer endTime={game.votingEndTime} />
+                          </div>
+                          <p className="text-xs text-blue-700 mt-1">
+                            Vote no melhor jogador da partida!
+                          </p>
+                        </div>
                       )}
                       
                       <div className="text-center mb-4">

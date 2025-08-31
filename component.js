@@ -11,6 +11,7 @@ const ArenaSobralApp = () => {
   const [joinRequests, setJoinRequests] = useState([]);
   const [friendlyMatches, setFriendlyMatches] = useState([]);
   const [fieldBookings, setFieldBookings] = useState([]);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [fieldTimeSlots, setFieldTimeSlots] = useState([
     {
       id: 1,
@@ -60,7 +61,8 @@ const ArenaSobralApp = () => {
       time: '20:00',
       location: 'Quadra Netifor',
       type: 'amistoso',
-      status: 'confirmado'
+      status: 'finalizado',
+      score: { team1: 3, team2: 2 }
     },
     {
       id: 3,
@@ -444,19 +446,70 @@ const ArenaSobralApp = () => {
       <StatusBar />
       <div className="px-6 py-8">
         <h1 className="text-white text-4xl font-bold mb-8">ArenaSobral</h1>
+        
+        {/* Mostrar status de login */}
+        {isLoggedIn && (
+          <div className="bg-green-500 text-white p-3 rounded-lg mb-4 text-center">
+            <p className="font-medium">Você está logado</p>
+            <button 
+              onClick={() => {
+                setIsLoggedIn(false);
+                alert('Você saiu da sua conta.');
+              }}
+              className="text-white underline text-sm mt-1"
+            >
+              Sair
+            </button>
+          </div>
+        )}
+        
         <div className="space-y-4">
-          <button 
-            onClick={() => setCurrentScreen('login')}
-            className="w-full bg-white rounded-xl p-4 flex items-center gap-4 shadow-lg"
-          >
-            <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center">
-              <User className="w-6 h-6 text-white" />
-            </div>
-            <div className="flex-1 text-left">
-              <span className="text-lg font-medium text-slate-800 block">Login ArenaSobral</span>
-              <span className="text-sm text-slate-500">Jogadores • Donos de Time • Areninhas</span>
-            </div>
-          </button>
+          {!isLoggedIn ? (
+            <button 
+              onClick={() => setCurrentScreen('login')}
+              className="w-full bg-white rounded-xl p-4 flex items-center gap-4 shadow-lg"
+            >
+              <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center">
+                <User className="w-6 h-6 text-white" />
+              </div>
+              <div className="flex-1 text-left">
+                <span className="text-lg font-medium text-slate-800 block">Login ArenaSobral</span>
+                <span className="text-sm text-slate-500">Jogadores • Donos de Time • Areninhas</span>
+              </div>
+            </button>
+          ) : (
+            <>
+              <button 
+                onClick={() => setCurrentScreen('playerboard')}
+                className="w-full bg-white rounded-xl p-4 flex items-center gap-4 shadow-lg"
+              >
+                <div className="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center">
+                  <User className="w-6 h-6 text-white" />
+                </div>
+                <span className="text-lg font-medium text-slate-800">Painel do Jogador</span>
+              </button>
+
+              <button 
+                onClick={() => setCurrentScreen('teamowner')}
+                className="w-full bg-white rounded-xl p-4 flex items-center gap-4 shadow-lg"
+              >
+                <div className="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center">
+                  <Users className="w-6 h-6 text-white" />
+                </div>
+                <span className="text-lg font-medium text-slate-800">Painel do Dono do Time</span>
+              </button>
+
+              <button 
+                onClick={() => setCurrentScreen('fieldowner')}
+                className="w-full bg-white rounded-xl p-4 flex items-center gap-4 shadow-lg"
+              >
+                <div className="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center">
+                  <MapPin className="w-6 h-6 text-white" />
+                </div>
+                <span className="text-lg font-medium text-slate-800">Areninha Privada</span>
+              </button>
+            </>
+          )}
 
           <button 
             onClick={() => setCurrentScreen('searchteams')}
@@ -476,36 +529,6 @@ const ArenaSobralApp = () => {
               <Users className="w-6 h-6 text-white" />
             </div>
             <span className="text-lg font-medium text-slate-800">Buscar Jogadores</span>
-          </button>
-
-          <button 
-            onClick={() => setCurrentScreen('playerboard')}
-            className="w-full bg-white rounded-xl p-4 flex items-center gap-4 shadow-lg"
-          >
-            <div className="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center">
-              <User className="w-6 h-6 text-white" />
-            </div>
-            <span className="text-lg font-medium text-slate-800">Painel do Jogador</span>
-          </button>
-
-          <button 
-            onClick={() => setCurrentScreen('teamowner')}
-            className="w-full bg-white rounded-xl p-4 flex items-center gap-4 shadow-lg"
-          >
-            <div className="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center">
-              <Users className="w-6 h-6 text-white" />
-            </div>
-            <span className="text-lg font-medium text-slate-800">Painel do Dono do Time</span>
-          </button>
-
-          <button 
-            onClick={() => setCurrentScreen('fieldowner')}
-            className="w-full bg-white rounded-xl p-4 flex items-center gap-4 shadow-lg"
-          >
-            <div className="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center">
-              <MapPin className="w-6 h-6 text-white" />
-            </div>
-            <span className="text-lg font-medium text-slate-800">Areninha Privada</span>
           </button>
 
           <button 
@@ -610,12 +633,15 @@ const ArenaSobralApp = () => {
           <button 
             onClick={() => {
               const userType = document.querySelector('input[name="userType"]:checked')?.value;
-              if (userType === 'player') {
-                setCurrentScreen('playerboard');
-              } else if (userType === 'teamowner') {
-                setCurrentScreen('teamowner');
-              } else if (userType === 'fieldowner') {
-                setCurrentScreen('fieldownerpanel');
+              if (userType) {
+                setIsLoggedIn(true);
+                if (userType === 'player') {
+                  setCurrentScreen('playerboard');
+                } else if (userType === 'teamowner') {
+                  setCurrentScreen('teamowner');
+                } else if (userType === 'fieldowner') {
+                  setCurrentScreen('fieldownerpanel');
+                }
               } else {
                 alert('Por favor, selecione o tipo de conta');
               }
@@ -1524,8 +1550,9 @@ const ArenaSobralApp = () => {
             <button 
               onClick={() => {
                 if (selectedUserType) {
-                  alert('Conta criada com sucesso! Agora você pode fazer login.');
-                  setCurrentScreen('login');
+                  setIsLoggedIn(true);
+                  alert('Conta criada com sucesso! Você está agora logado.');
+                  setCurrentScreen('home');
                 } else {
                   alert('Por favor, selecione o tipo de conta');
                 }
@@ -1606,6 +1633,15 @@ const ArenaSobralApp = () => {
     });
 
     const toggleAvailability = (quadra, horario) => {
+      // Verificar se o usuário está logado antes de permitir a reserva
+      if (!isLoggedIn) {
+        const confirmLogin = window.confirm('Você precisa estar logado para reservar um horário. Deseja fazer login agora?');
+        if (confirmLogin) {
+          setCurrentScreen('login');
+        }
+        return;
+      }
+      
       setFieldAvailability(prev => ({
         ...prev,
         [quadra]: {
@@ -1726,7 +1762,19 @@ const ArenaSobralApp = () => {
             {/* Action buttons with improved styling */}
             <div className="p-4 bg-white border-t border-gray-100">
               <div className="flex gap-2 mb-4">
-                <button className="flex-1 bg-blue-500 text-white py-2.5 px-4 rounded-lg text-xs font-bold hover:bg-blue-600 transition shadow-md">
+                <button 
+                  className="flex-1 bg-blue-500 text-white py-2.5 px-4 rounded-lg text-xs font-bold hover:bg-blue-600 transition shadow-md"
+                  onClick={() => {
+                    if (!isLoggedIn) {
+                      const confirmLogin = window.confirm('Você precisa estar logado para salvar alterações. Deseja fazer login agora?');
+                      if (confirmLogin) {
+                        setCurrentScreen('login');
+                      }
+                      return;
+                    }
+                    alert('Alterações salvas com sucesso!');
+                  }}
+                >
                   Salvar Alterações
                 </button>
                 <button className="flex-1 bg-gray-400 text-white py-2.5 px-4 rounded-lg text-xs font-bold hover:bg-gray-500 transition shadow-md">
@@ -2018,6 +2066,409 @@ const ArenaSobralApp = () => {
     </div>
   );
 
+  // Estado para armazenar os votos para o "Melhor da Partida"
+  const [gameVotes, setGameVotes] = useState({});
+  // Estado para armazenar o tempo restante para votação
+  const [votingTimers, setVotingTimers] = useState({});
+
+  // Função para iniciar a votação quando um placar é registrado
+  const startVoting = (gameId) => {
+    const endTime = Date.now() + 10 * 60 * 1000; // 10 minutos a partir de agora
+    setVotingTimers(prev => ({
+      ...prev,
+      [gameId]: endTime
+    }));
+    
+    // Limpar o timer após 10 minutos e determinar o vencedor
+    setTimeout(() => {
+      finishVoting(gameId);
+    }, 10 * 60 * 1000);
+  };
+
+  // Função para finalizar a votação e determinar o melhor jogador
+  const finishVoting = (gameId) => {
+    setVotingTimers(prev => {
+      const newTimers = { ...prev };
+      delete newTimers[gameId];
+      return newTimers;
+    });
+    
+    // Determinar o jogador com mais votos
+    const votes = gameVotes[gameId] || {};
+    let maxVotes = 0;
+    let bestPlayer = null;
+    
+    Object.entries(votes).forEach(([playerId, count]) => {
+      if (count > maxVotes) {
+        maxVotes = count;
+        bestPlayer = playerId;
+      }
+    });
+    
+    // Atualizar o jogo com o melhor jogador
+    if (bestPlayer) {
+      setTeamSchedule(prev => 
+        prev.map(game => 
+          game.id === gameId 
+            ? { ...game, bestPlayer }
+            : game
+        )
+      );
+    }
+  };
+
+  // Função para votar em um jogador
+  const voteForPlayer = (gameId, playerId) => {
+    // Verificar se a votação ainda está ativa
+    if (!votingTimers[gameId]) return;
+    
+    setGameVotes(prev => {
+      const newVotes = { ...prev };
+      if (!newVotes[gameId]) {
+        newVotes[gameId] = {};
+      }
+      newVotes[gameId][playerId] = (newVotes[gameId][playerId] || 0) + 1;
+      return newVotes;
+    });
+  };
+
+  const MyTeamScreen = () => (
+    <div className="bg-slate-800 min-h-screen">
+      <StatusBar />
+      <div className="flex items-center gap-4 px-4 py-4 text-white">
+        <button onClick={() => setCurrentScreen('teamowner')}>
+          <ArrowLeft className="w-6 h-6" />
+        </button>
+        <h1 className="text-xl font-bold">Meu Time</h1>
+      </div>
+      
+      <div className="px-4 py-4">
+        <div className="bg-white rounded-xl p-4 mb-4">
+          <h2 className="text-xl font-bold text-slate-800 mb-4">Vila Nove F.C.</h2>
+          
+          <div className="mb-6">
+            <h3 className="font-bold text-slate-800 mb-3">Próximos Jogos</h3>
+            <div className="space-y-3">
+              {teamSchedule
+                .filter(game => game.status !== 'finalizado')
+                .map(game => (
+                  <div key={game.id} className="border border-gray-200 rounded-lg p-3">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="font-medium">vs {game.opponent}</span>
+                      <span className={`text-xs px-2 py-1 rounded ${
+                        game.status === 'confirmado' 
+                          ? 'bg-green-100 text-green-800' 
+                          : game.status === 'pendente'
+                          ? 'bg-yellow-100 text-yellow-800'
+                          : 'bg-gray-100 text-gray-800'
+                      }`}>
+                        {game.status === 'confirmado' && 'Confirmado'}
+                        {game.status === 'pendente' && 'Pendente'}
+                        {game.status === 'cancelado' && 'Cancelado'}
+                      </span>
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      {game.date} às {game.time} • {game.location}
+                    </div>
+                    <div className="flex gap-2 mt-2">
+                      {game.status === 'pendente' && (
+                        <button 
+                          onClick={() => handleGameAction(game.id, 'confirm')}
+                          className="text-xs bg-green-500 text-white px-2 py-1 rounded"
+                        >
+                          Confirmar
+                        </button>
+                      )}
+                      <button 
+                        onClick={() => handleGameAction(game.id, 'reschedule')}
+                        className="text-xs bg-blue-500 text-white px-2 py-1 rounded"
+                      >
+                        Remarcar
+                      </button>
+                      <button 
+                        onClick={() => handleGameAction(game.id, 'cancel')}
+                        className="text-xs bg-red-500 text-white px-2 py-1 rounded"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  </div>
+                ))
+              }
+            </div>
+          </div>
+          
+          <div>
+            <h3 className="font-bold text-slate-800 mb-3">Jogos Finalizados</h3>
+            <div className="space-y-4">
+              {teamSchedule
+                .filter(game => game.status === 'finalizado')
+                .map(game => (
+                  <div key={game.id} className="border border-gray-200 rounded-lg p-3">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="font-medium">vs {game.opponent}</span>
+                      <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                        Finalizado
+                      </span>
+                    </div>
+                    
+                    {/* Exibir placar */}
+                    <div className="text-center my-2">
+                      <div className="text-lg font-bold">
+                        {game.score ? `${game.score.team1} x ${game.score.team2}` : 'Placar não registrado'}
+                      </div>
+                    </div>
+                    
+                    {/* Sistema de votação para Melhor da Partida */}
+                    {game.score && !game.bestPlayer && votingTimers[game.id] && (
+                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mt-3">
+                        <div className="flex justify-between items-center mb-2">
+                          <h4 className="font-bold text-yellow-800">Melhor da Partida</h4>
+                          <div className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
+                            {Math.ceil((votingTimers[game.id] - Date.now()) / 60000)} min restantes
+                          </div>
+                        </div>
+                        <p className="text-xs text-yellow-700 mb-3">
+                          Vote no melhor jogador da partida!
+                        </p>
+                        
+                        {/* Lista de jogadores para votar */}
+                        <div className="grid grid-cols-2 gap-2">
+                          {registeredPlayers
+                            .filter(player => 
+                              player.currentTeam === 'Vila Nove F.C.' || 
+                              Math.random() > 0.5 // Simulação de jogadores do time adversário
+                            )
+                            .slice(0, 4)
+                            .map(player => (
+                              <button
+                                key={player.id}
+                                onClick={() => voteForPlayer(game.id, player.id)}
+                                className="text-xs bg-white border border-yellow-300 rounded py-2 px-1 hover:bg-yellow-100 transition"
+                              >
+                                <div className="font-medium">{player.name}</div>
+                                <div className="text-gray-600">{player.position}</div>
+                              </button>
+                            ))
+                          }
+                        </div>
+                        
+                        {/* Exibir votos atuais */}
+                        {gameVotes[game.id] && Object.keys(gameVotes[game.id]).length > 0 && (
+                          <div className="mt-3 pt-2 border-t border-yellow-200">
+                            <div className="text-xs font-medium text-yellow-800 mb-1">Votos atuais:</div>
+                            <div className="flex flex-wrap gap-1">
+                              {Object.entries(gameVotes[game.id]).map(([playerId, votes]) => {
+                                const player = registeredPlayers.find(p => p.id === parseInt(playerId));
+                                return player ? (
+                                  <div key={playerId} className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
+                                    {player.name}: {votes}
+                                  </div>
+                                ) : null;
+                              })}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    
+                    {/* Exibir melhor jogador se já foi determinado */}
+                    {game.bestPlayer && (
+                      <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 border border-yellow-200 rounded-lg p-3 mt-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center">
+                            <span className="text-white font-bold text-lg">★</span>
+                          </div>
+                          <div>
+                            <h4 className="font-bold text-yellow-800">Melhor da Partida!</h4>
+                            {(() => {
+                              const player = registeredPlayers.find(p => p.id === parseInt(game.bestPlayer));
+                              return player ? (
+                                <p className="text-sm text-yellow-700">
+                                  {player.name} • {player.position}
+                                </p>
+                              ) : null;
+                            })()}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    <div className="text-sm text-gray-600 mt-2">
+                      {game.date} às {game.time} • {game.location}
+                    </div>
+                  </div>
+                ))
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Função para registrar placar de um jogo
+  const registerScore = (gameId, team1Score, team2Score) => {
+    setTeamSchedule(prev => 
+      prev.map(game => 
+        game.id === gameId 
+          ? { 
+              ...game, 
+              status: 'finalizado',
+              score: { team1: team1Score, team2: team2Score }
+            }
+          : game
+      )
+    );
+    
+    // Iniciar votação para o Melhor da Partida
+    startVoting(gameId);
+  };
+
+  const ManagerScreen = () => {
+    const [selectedGameId, setSelectedGameId] = useState(null);
+    const [team1Score, setTeam1Score] = useState('');
+    const [team2Score, setTeam2Score] = useState('');
+
+    const handleRegisterScore = (gameId) => {
+      const score1 = parseInt(team1Score);
+      const score2 = parseInt(team2Score);
+      
+      if (isNaN(score1) || isNaN(score2)) {
+        alert('Por favor, insira valores numéricos válidos para os placares');
+        return;
+      }
+      
+      registerScore(gameId, score1, score2);
+      setSelectedGameId(null);
+      setTeam1Score('');
+      setTeam2Score('');
+    };
+
+    return (
+      <div className="bg-slate-800 min-h-screen">
+        <StatusBar />
+        <div className="flex items-center gap-4 px-4 py-4 text-white">
+          <button onClick={() => setCurrentScreen('teamowner')}>
+            <ArrowLeft className="w-6 h-6" />
+          </button>
+          <h1 className="text-xl font-bold">Gerenciar Time</h1>
+        </div>
+        
+        <div className="px-4 py-4">
+          <div className="bg-white rounded-xl p-4 mb-4">
+            <h2 className="text-xl font-bold text-slate-800 mb-4">Vila Nove F.C.</h2>
+            
+            <div className="mb-6">
+              <h3 className="font-bold text-slate-800 mb-3">Registrar Placar</h3>
+              <div className="space-y-3">
+                {teamSchedule
+                  .filter(game => game.status === 'confirmado')
+                  .map(game => (
+                    <div key={game.id} className="border border-gray-200 rounded-lg p-3">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="font-medium">vs {game.opponent}</span>
+                      </div>
+                      <div className="text-sm text-gray-600 mb-3">
+                        {game.date} às {game.time} • {game.location}
+                      </div>
+                      
+                      {selectedGameId === game.id ? (
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex-1 text-center">
+                              <div className="text-sm font-medium">Nosso time</div>
+                              <input
+                                type="number"
+                                value={team1Score}
+                                onChange={(e) => setTeam1Score(e.target.value)}
+                                className="w-full mt-1 text-center border border-gray-300 rounded p-2"
+                                min="0"
+                              />
+                            </div>
+                            <div className="text-xl font-bold">x</div>
+                            <div className="flex-1 text-center">
+                              <div className="text-sm font-medium">{game.opponent}</div>
+                              <input
+                                type="number"
+                                value={team2Score}
+                                onChange={(e) => setTeam2Score(e.target.value)}
+                                className="w-full mt-1 text-center border border-gray-300 rounded p-2"
+                                min="0"
+                              />
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => handleRegisterScore(game.id)}
+                              className="flex-1 bg-green-500 text-white py-2 rounded text-sm"
+                            >
+                              Confirmar
+                            </button>
+                            <button
+                              onClick={() => setSelectedGameId(null)}
+                              className="flex-1 bg-gray-300 text-gray-700 py-2 rounded text-sm"
+                            >
+                              Cancelar
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setSelectedGameId(game.id)}
+                          className="w-full bg-blue-500 text-white py-2 rounded text-sm"
+                        >
+                          Registrar Placar
+                        </button>
+                      )}
+                    </div>
+                  ))
+                }
+              </div>
+            </div>
+            
+            <div>
+              <h3 className="font-bold text-slate-800 mb-3">Todos os Jogos</h3>
+              <div className="space-y-3">
+                {teamSchedule.map(game => (
+                  <div key={game.id} className="border border-gray-200 rounded-lg p-3">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="font-medium">vs {game.opponent}</span>
+                      <span className={`text-xs px-2 py-1 rounded ${
+                        game.status === 'confirmado' 
+                          ? 'bg-green-100 text-green-800' 
+                          : game.status === 'pendente'
+                          ? 'bg-yellow-100 text-yellow-800'
+                          : game.status === 'cancelado'
+                          ? 'bg-red-100 text-red-800'
+                          : 'bg-blue-100 text-blue-800'
+                      }`}>
+                        {game.status === 'confirmado' && 'Confirmado'}
+                        {game.status === 'pendente' && 'Pendente'}
+                        {game.status === 'cancelado' && 'Cancelado'}
+                        {game.status === 'finalizado' && 'Finalizado'}
+                      </span>
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      {game.date} às {game.time} • {game.location}
+                    </div>
+                    {game.score && (
+                      <div className="text-center mt-2">
+                        <div className="text-lg font-bold">
+                          {game.score.team1} x {game.score.team2}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const renderCurrentScreen = () => {
     switch (currentScreen) {
       case 'home':
@@ -2036,6 +2487,10 @@ const ArenaSobralApp = () => {
         return <PlayerBoardScreen />;
       case 'teamowner':
         return <TeamOwnerScreen />;
+      case 'myteam':
+        return <MyTeamScreen />;
+      case 'manager':
+        return <ManagerScreen />;
       default:
         return <HomeScreen />;
     }
