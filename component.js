@@ -530,19 +530,6 @@ const ArenaSobralApp = () => {
             </div>
             <span className="text-lg font-medium text-slate-800">Buscar Jogadores</span>
           </button>
-
-          <button 
-            onClick={() => setCurrentScreen('fieldschedule')}
-            className="w-full bg-white rounded-xl p-4 flex items-center gap-4 shadow-lg"
-          >
-            <div className="w-12 h-12 bg-red-500 rounded-xl flex items-center justify-center">
-              <Calendar className="w-6 h-6 text-white" />
-            </div>
-            <div className="flex-1 text-left">
-              <span className="text-lg font-medium text-slate-800 block">Gerenciar Horários</span>
-              <span className="text-sm text-slate-500">Cadastrar horários das quadras</span>
-            </div>
-          </button>
         </div>
       </div>
     </div>
@@ -2477,8 +2464,6 @@ const ArenaSobralApp = () => {
         return <LoginScreen />;
       case 'register':
         return <RegisterScreen />;
-      case 'fieldschedule':
-        return <FieldScheduleScreen />;
       case 'searchteams':
         return <SearchTeamsScreen />;
       case 'searchplayers':
