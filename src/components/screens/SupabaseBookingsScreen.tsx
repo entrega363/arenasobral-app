@@ -154,7 +154,7 @@ export function SupabaseBookingsScreen() {
                     
                     <div className="flex items-center gap-2 text-slate-600">
                       <User className="w-4 h-4" />
-                      <span>{booking.user?.name || booking.user?.email || 'Usuário'}</span>
+                      <span>{booking.playerName || 'Usuário'}</span>
                     </div>
                     
                     <div className="pt-2 border-t border-gray-100">
