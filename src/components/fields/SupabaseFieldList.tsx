@@ -33,7 +33,27 @@ export function SupabaseFieldList({ filters }: FieldListProps) {
       setLoading(true)
       
       // Obter todos os campos do Supabase
-      let allFields = await supabaseFieldService.getAllFields()
+      let allFieldsData = await supabaseFieldService.getAllFields()
+      
+      // Converter Field[] para SupabaseField[]
+      let allFields: SupabaseField[] = allFieldsData.map(field => ({
+        id: field.id,
+        name: field.name,
+        location: field.location,
+        address: field.address || field.location,
+        description: field.description || '',
+        field_type: field.fieldType === 'FUTSAL' ? 'GRASS' : 
+                   field.fieldType === 'BEACH' ? 'GRASS' : 
+                   field.fieldType === 'INDOOR' ? 'CONCRETE' : 'SOCIETY',
+        price_per_hour: field.pricePerHour || 0,
+        rating: field.rating || 0,
+        owner_id: field.ownerId,
+        created_at: new Date().toISOString(),
+        ...(field.photos && { photos: field.photos }),
+        ...(field.amenities && { amenities: field.amenities }),
+        ...(field.rules && { rules: field.rules }),
+        ...(field.contactInfo && { contact_info: field.contactInfo })
+      }))
       
       // Aplicar filtros se fornecidos
       if (filters) {
