@@ -19,7 +19,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { supabaseFieldService } from '@/lib/supabase/fieldService'
 import { supabaseBookingService } from '@/lib/supabase/bookingService'
 import { supabaseReviewService } from '@/lib/supabase/reviewService'
-import { SupabaseField, SupabaseReview, SupabaseBooking } from '@/types'
+import { SupabaseField, SupabaseReview, SupabaseBooking, Field } from '@/types'
 import { formatCurrency, formatSupabaseDate, formatSupabaseTime } from '@/lib/supabase/format'
 import { useAuth } from '@/contexts/AuthContext'
 
@@ -48,7 +48,24 @@ export function SupabaseFieldDetails({ fieldId }: FieldDetailsProps) {
       // Carregar dados do campo
       const fieldData = await supabaseFieldService.getFieldById(fieldId)
       if (fieldData) {
-        setField(fieldData)
+        // Converter Field para SupabaseField
+        const supabaseField: SupabaseField = {
+          id: fieldData.id,
+          name: fieldData.name,
+          location: fieldData.location,
+          address: fieldData.address || fieldData.location,
+          description: fieldData.description || '',
+          field_type: fieldData.fieldType || 'SOCIETY',
+          price_per_hour: fieldData.pricePerHour || 0,
+          rating: fieldData.rating || 0,
+          owner_id: fieldData.ownerId,
+          created_at: new Date().toISOString(),
+          ...(fieldData.photos && { photos: fieldData.photos }),
+          ...(fieldData.amenities && { amenities: fieldData.amenities }),
+          ...(fieldData.rules && { rules: fieldData.rules }),
+          ...(fieldData.contactInfo && { contact_info: fieldData.contactInfo })
+        }
+        setField(supabaseField)
       }
       
       // Carregar avaliações
