@@ -111,13 +111,15 @@ export function SupabaseFieldDetails({ fieldId }: FieldDetailsProps) {
     try {
       // Criar reserva
       const bookingData = {
-        field_id: fieldId,
-        user_id: user.id,
-        time_slot_id: selectedTimeSlot,
-        date: selectedDate,
-        status: 'PENDING',
-        payment_status: 'PENDING',
-        total_amount: field?.price_per_hour || 0
+        fieldId: fieldId,
+        timeSlotId: selectedTimeSlot,
+        playerName: user.email.split('@')[0], // Usar parte do email como nome
+        playerWhatsapp: '', // Pode ser preenchido posteriormente
+        date: new Date(selectedDate),
+        status: 'PENDING' as const,
+        paymentMethod: 'PIX' as const,
+        createdAt: new Date(),
+        updatedAt: new Date()
       }
 
       const result = await supabaseBookingService.createBooking(bookingData)
