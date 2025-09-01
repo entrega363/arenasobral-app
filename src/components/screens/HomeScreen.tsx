@@ -20,14 +20,6 @@ export function HomeScreen() {
       onClick: () => router.push('/login')
     },
     {
-      id: 'searchfields',
-      title: 'Buscar Areninhas',
-      subtitle: 'Encontre e reserve horários',
-      icon: MapPin,
-      bgColor: 'bg-green-600',
-      onClick: () => router.push('/search/fields')
-    },
-    {
       id: 'gamesfeed',
       title: 'Feed de Jogos',
       subtitle: 'Veja todos os jogos marcados',
