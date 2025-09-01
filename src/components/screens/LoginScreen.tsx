@@ -187,7 +187,7 @@ export function LoginScreen() {
 
             <Button 
               onClick={handleLogin}
-              className="w-full bg-blue-500 text-white font-medium py-3 rounded-lg mb-4 hover:bg-blue-600 transition"
+              className="w-full bg-green-500 text-white font-medium py-3 rounded-lg mb-4 hover:bg-green-600 transition"
             >
               Entrar
             </Button>
