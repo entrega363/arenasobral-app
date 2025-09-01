@@ -10,13 +10,17 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "test:ci": "jest --ci --coverage --watchAll=false"
+    "test:ci": "jest --ci --coverage --watchAll=false",
+    "supabase:init": "node scripts/initSupabase.js",
+    "supabase:seed": "node scripts/seedSupabase.js",
+    "supabase:reset": "node scripts/initSupabase.js && node scripts/seedSupabase.js"
   },
   "dependencies": {
     "@radix-ui/react-label": "^2.1.7",
     "@radix-ui/react-select": "^2.2.6",
     "@radix-ui/react-slot": "^1.1.0",
     "@radix-ui/react-toast": "^1.2.1",
+    "@supabase/supabase-js": "^2.56.1",
     "@tailwindcss/forms": "^0.5.7",
     "autoprefixer": "^10.4.19",
     "class-variance-authority": "^0.7.0",

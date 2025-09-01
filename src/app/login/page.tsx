@@ -1,5 +1,10 @@
-import { LoginScreen } from '@/components/screens/LoginScreen'
+import { SupabaseLoginScreen } from '@/components/screens/SupabaseLoginScreen'
+import { AuthProvider } from '@/contexts/AuthContext'
 
 export default function LoginPage() {
-  return <LoginScreen />
+  return (
+    <AuthProvider>
+      <SupabaseLoginScreen />
+    </AuthProvider>
+  )
 }

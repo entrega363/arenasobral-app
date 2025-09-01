@@ -1,5 +1,10 @@
-import { BookingsScreen } from '@/components/screens/BookingsScreen'
+import { SupabaseBookingsScreen } from '@/components/screens/SupabaseBookingsScreen'
+import { AuthProvider } from '@/contexts/AuthContext'
 
 export default function BookingsPage() {
-  return <BookingsScreen />
+  return (
+    <AuthProvider>
+      <SupabaseBookingsScreen />
+    </AuthProvider>
+  )
 }

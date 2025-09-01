@@ -10,6 +10,18 @@ export interface User {
   updatedAt: Date
 }
 
+// Tipos do Supabase
+export type {
+  SupabaseUser,
+  SupabaseField,
+  SupabaseTimeSlot,
+  SupabaseBooking,
+  SupabaseReview,
+  SupabaseTeam,
+  SupabasePlayer,
+  SupabaseGame
+} from './supabase'
+
 export interface Player {
   id: string
   userId: string

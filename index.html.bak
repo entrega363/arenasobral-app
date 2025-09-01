@@ -1,0 +1,1274 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ArenaSobral App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      html,
+      body,
+      #root {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+      }
+    </style>
+  </head>
+  <body class="min-h-screen">
+    <div id="root"></div>
+
+    <script type="module">
+      // Import React from CDN (matching component version)
+      import React, { useState, useEffect } from 'https://esm.sh/react@18.2.0';
+      import { createRoot } from 'https://esm.sh/react-dom@18.2.0/client';
+
+      // Hatch client initialization with localStorage-based storage
+      const initHatchClient = async (useEffect, useState) => {
+          // Try to load stored state from JSON file, fallback to inline data
+          let initialStorage = {};
+          try {
+              const response = await fetch('./storedState.json');
+              initialStorage = await response.json();
+          } catch (error) {
+              console.warn('Could not load storedState.json, using inline data:', error);
+              // Fallback to inline stored state data for file:// URLs
+              initialStorage = {};
+          }
+
+          // Initialize localStorage with stored state
+          const STORAGE_PREFIX = 'hatch_component_';
+          Object.entries(initialStorage).forEach(([key, value]) => {
+              const storageKey = STORAGE_PREFIX + key;
+              if (!localStorage.getItem(storageKey)) {
+                  localStorage.setItem(storageKey, JSON.stringify(value));
+              }
+          });
+
+          // Implement useStoredState hook compatible with Hatch
+          const useStoredState = (key, defaultValue) => {
+              const storageKey = STORAGE_PREFIX + key;
+
+              // Get initial value from localStorage or use default
+              const getStoredValue = () => {
+                  try {
+                      const item = localStorage.getItem(storageKey);
+                      return item ? JSON.parse(item) : defaultValue;
+                  } catch (error) {
+                      console.warn('Error reading from localStorage:', error);
+                      return defaultValue;
+                  }
+              };
+
+              const [value, setValue] = useState(getStoredValue);
+
+              // Update localStorage when value changes
+              const setStoredValue = (newValue) => {
+                  try {
+                      const valueToStore = typeof newValue === 'function' ? newValue(value) : newValue;
+                      localStorage.setItem(storageKey, JSON.stringify(valueToStore));
+                      setValue(valueToStore);
+                  } catch (error) {
+                      console.error('Error writing to localStorage:', error);
+                  }
+              };
+
+              // Listen for storage changes from other tabs/windows
+              useEffect(() => {
+                  const handleStorageChange = (e) => {
+                      if (e.key === storageKey && e.newValue) {
+                          try {
+                              setValue(JSON.parse(e.newValue));
+                          } catch (error) {
+                              console.warn('Error parsing storage change:', error);
+                          }
+                      }
+                  };
+
+                  window.addEventListener('storage', handleStorageChange);
+                  return () => window.removeEventListener('storage', handleStorageChange);
+              }, [storageKey]);
+
+              return [value, setStoredValue];
+          };
+
+          // Set up global Hatch client interface
+          window.hatch = {
+              useStoredState,
+              // Mock implementations for other Hatch features
+              useUser: () => ({ id: 'local', name: 'Local User', color: '#4F46E5' }),
+              useCollaborators: () => [],
+              useAssets: () => [],
+              getAllItems: async () => {
+                  const items = {};
+                  for (let i = 0; i < localStorage.length; i++) {
+                      const key = localStorage.key(i);
+                      if (key && key.startsWith(STORAGE_PREFIX)) {
+                          const itemKey = key.replace(STORAGE_PREFIX, '');
+                          try {
+                              items[itemKey] = JSON.parse(localStorage.getItem(key));
+                          } catch (error) {
+                              console.warn('Error parsing stored item:', key, error);
+                          }
+                      }
+                  }
+                  return items;
+              },
+              getItem: async (key) => {
+                  try {
+                      const item = localStorage.getItem(STORAGE_PREFIX + key);
+                      return item ? JSON.parse(item) : undefined;
+                  } catch (error) {
+                      console.warn('Error getting item:', key, error);
+                      return undefined;
+                  }
+              },
+              setItem: async (key, value) => {
+                  try {
+                      localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(value));
+                  } catch (error) {
+                      console.error('Error setting item:', key, error);
+                  }
+              }
+          };
+
+          // Backward compatibility and global availability
+          window.useStoredState = useStoredState;
+          window.React = React;
+          window.useState = useState;
+          window.useEffect = useEffect;
+      };
+
+      // Initialize Hatch client
+      await initHatchClient(useEffect, useState);
+
+      try {
+          // Try to load component from external file, fallback to inline code
+          let componentCode;
+          try {
+              const response = await fetch('./component.js');
+              componentCode = await response.text();
+          } catch (fetchError) {
+              console.warn('Could not load component.js, using inline code:', fetchError);
+              // Fallback to inline component code for file:// URLs
+              componentCode = `// <stdin>
+import React, { useState } from "https://esm.sh/react@18.2.0";
+import { ArrowLeft, User, Users, Calendar, MessageSquare, Trophy, Clock, MapPin, ChevronDown, ChevronRight } from "https://esm.sh/lucide-react?deps=react@18.2.0,react-dom@18.2.0";
+var ArenaSobralApp = () => {
+  const [currentScreen, setCurrentScreen] = useState("home");
+  const [selectedTab, setSelectedTab] = useState("reservas");
+  const [selectedPlayerPhoto, setSelectedPlayerPhoto] = useState(null);
+  const [contractOffers, setContractOffers] = useState([]);
+  const [selectedPlayers, setSelectedPlayers] = useState([]);
+  const [selectedTeam, setSelectedTeam] = useState(null);
+  const [joinRequests, setJoinRequests] = useState([]);
+  const [friendlyMatches, setFriendlyMatches] = useState([]);
+  const [fieldBookings, setFieldBookings] = useState([]);
+  const [fieldTimeSlots, setFieldTimeSlots] = useState([
+    {
+      id: 1,
+      day: "Segunda-feira",
+      timeSlots: [
+        { id: 1, time: "06:00 - 07:00", price: 80, available: true },
+        { id: 2, time: "07:00 - 08:00", price: 80, available: true },
+        { id: 3, time: "18:00 - 19:00", price: 120, available: false },
+        { id: 4, time: "19:00 - 20:00", price: 120, available: true },
+        { id: 5, time: "20:00 - 21:00", price: 120, available: true },
+        { id: 6, time: "21:00 - 22:00", price: 120, available: true }
+      ]
+    },
+    {
+      id: 2,
+      day: "Ter\\xE7a-feira",
+      timeSlots: [
+        { id: 7, time: "06:00 - 07:00", price: 80, available: true },
+        { id: 8, time: "07:00 - 08:00", price: 80, available: true },
+        { id: 9, time: "18:00 - 19:00", price: 120, available: true },
+        { id: 10, time: "19:00 - 20:00", price: 120, available: false },
+        { id: 11, time: "20:00 - 21:00", price: 120, available: true },
+        { id: 12, time: "21:00 - 22:00", price: 120, available: true }
+      ]
+    }
+  ]);
+  const [fieldStats, setFieldStats] = useState({
+    totalBookings: 45,
+    weeklyRevenue: 2400,
+    occupancyRate: 78,
+    nextBooking: "18:00 - Vila Nove F.C."
+  });
+  const [teamSchedule, setTeamSchedule] = useState([
+    {
+      id: 1,
+      opponent: "Amigos da Bola",
+      date: "15/08/2025",
+      time: "19:00",
+      location: "Campo do Centro",
+      type: "amistoso",
+      status: "confirmado"
+    },
+    {
+      id: 2,
+      opponent: "Estrela do Norte",
+      date: "22/08/2025",
+      time: "20:00",
+      location: "Quadra Netifor",
+      type: "amistoso",
+      status: "confirmado"
+    },
+    {
+      id: 3,
+      opponent: "Uni\\xE3o FC",
+      date: "29/08/2025",
+      time: "18:30",
+      location: "Campo da Cohab",
+      type: "amistoso",
+      status: "pendente"
+    }
+  ]);
+  const tournaments = [
+    { name: "Cup Futebol", date: "2 a 13 de Maio 2024", status: "Inscri\\xE7\\xE3o Aberta" },
+    { name: "Campeonato Sobralense", date: "10 a 23 de Junho 2024", status: "Inscri\\xE7\\xE3o Encerrada" },
+    { name: "Torneio Municipal", date: "5 a 17 de Julho 2024", status: "Inscri\\xE7\\xE3o Encerrada" }
+  ];
+  const registeredTeams = [
+    {
+      id: 1,
+      name: "Vila Nove F.C.",
+      location: "Sobral Centro",
+      players: 15,
+      captain: "Jo\\xE3o Silva",
+      whatsapp: "(85) 99999-1234",
+      category: "Racha",
+      playersList: [1, 5]
+      // IDs dos jogadores no time
+    },
+    {
+      id: 2,
+      name: "Amigos da Bola",
+      location: "Cohab",
+      players: 12,
+      captain: "Pedro Santos",
+      whatsapp: "(85) 99999-5678",
+      category: "Veterano",
+      playersList: [2, 4]
+    },
+    {
+      id: 3,
+      name: "Estrela do Norte",
+      location: "Alto da Bras\\xEDlia",
+      players: 18,
+      captain: "Carlos Lima",
+      whatsapp: "(85) 99999-9012",
+      category: "Sub20",
+      playersList: [3, 6]
+    },
+    {
+      id: 4,
+      name: "Uni\\xE3o FC",
+      location: "Sinh\\xE1 Sab\\xF3ia",
+      players: 14,
+      captain: "Antonio Costa",
+      whatsapp: "(85) 99999-3456",
+      category: "2Q",
+      playersList: [5]
+    },
+    {
+      id: 5,
+      name: "For\\xE7a Jovem",
+      location: "Dom Expedito",
+      players: 16,
+      captain: "Rafael Mendes",
+      whatsapp: "(85) 99999-7890",
+      category: "1Q",
+      playersList: [1, 3]
+    }
+  ];
+  const registeredPlayers = [
+    {
+      id: 1,
+      name: "Jo\\xE3o Silva",
+      age: 25,
+      position: "Atacante",
+      location: "Sobral Centro",
+      whatsapp: "(85) 99999-1111",
+      experience: "5 anos",
+      currentTeam: "Vila Nove F.C.",
+      availability: "Noite",
+      category: "Racha",
+      teamsCount: 2,
+      // Quantidade de times que participa
+      photo: "assets/joao-silva.jpeg?prompt=Young%20Brazilian%20soccer%20player%2025%20years%20old%20smiling%20professional%20headshot"
+    },
+    {
+      id: 2,
+      name: "Pedro Santos",
+      age: 28,
+      position: "Goleiro",
+      location: "Cohab",
+      whatsapp: "(85) 99999-2222",
+      experience: "7 anos",
+      currentTeam: "Sem time",
+      availability: "Tarde/Noite",
+      category: "Veterano",
+      teamsCount: 0,
+      photo: "assets/pedro-santos.jpeg?prompt=Brazilian%20soccer%20goalkeeper%2028%20years%20old%20confident%20smile%20professional%20photo"
+    },
+    {
+      id: 3,
+      name: "Carlos Lima",
+      age: 30,
+      position: "Zagueiro",
+      location: "Alto da Bras\\xEDlia",
+      whatsapp: "(85) 99999-3333",
+      experience: "8 anos",
+      currentTeam: "Estrela do Norte",
+      availability: "Final de Semana",
+      category: "1Q",
+      teamsCount: 1,
+      photo: "assets/carlos-lima.jpeg?prompt=Brazilian%20defender%20soccer%20player%2030%20years%20old%20serious%20professional%20headshot"
+    },
+    {
+      id: 4,
+      name: "Marco Antonio",
+      age: 23,
+      position: "Meio-campo",
+      location: "Dom Expedito",
+      whatsapp: "(85) 99999-4444",
+      experience: "3 anos",
+      currentTeam: "Sem time",
+      availability: "Manh\\xE3/Tarde",
+      category: "Sub20",
+      teamsCount: 0,
+      photo: "assets/marco-antonio.jpeg?prompt=Young%20Brazilian%20midfielder%2023%20years%20old%20friendly%20smile%20athletic%20photo"
+    },
+    {
+      id: 5,
+      name: "Felipe Costa",
+      age: 26,
+      position: "Atacante",
+      location: "Centro",
+      whatsapp: "(85) 99999-5555",
+      experience: "4 anos",
+      currentTeam: "Uni\\xE3o FC",
+      availability: "Noite",
+      category: "2Q",
+      teamsCount: 1,
+      photo: "assets/felipe-costa.jpeg?prompt=Brazilian%20striker%2026%20years%20old%20confident%20expression%20professional%20soccer%20photo"
+    },
+    {
+      id: 6,
+      name: "Ricardo Oliveira",
+      age: 32,
+      position: "Zagueiro",
+      location: "Sinh\\xE1 Sab\\xF3ia",
+      whatsapp: "(85) 99999-6666",
+      experience: "10 anos",
+      currentTeam: "Sem time",
+      availability: "Qualquer hor\\xE1rio",
+      category: "Veterano",
+      teamsCount: 0,
+      photo: "assets/ricardo-oliveira.jpeg?prompt=Experienced%20Brazilian%20defender%2032%20years%20old%20mature%20professional%20soccer%20headshot"
+    }
+  ];
+  const todaySchedule = [
+    { time: "19:00", team: "Quadra Netifor. Vila Nove F.C.", duration: "20:00" },
+    { time: "20:00", team: "Amigos da Bola", duration: "20:00" }
+  ];
+  const handleContactPlayer = (player) => {
+    const newOffer = {
+      id: Date.now(),
+      playerName: player.name,
+      teamName: "Vila Nove F.C.",
+      // Nome do time que está contratando (pode ser dinâmico)
+      teamId: 1,
+      // ID do time que está fazendo a proposta
+      position: player.position,
+      date: (/* @__PURE__ */ new Date()).toLocaleDateString("pt-BR"),
+      status: "pending"
+      // pending, accepted, rejected
+    };
+    setContractOffers((prev) => [...prev, newOffer]);
+    alert(\`Proposta enviada para \${player.name}! Aguarde a resposta.\`);
+  };
+  const handleOfferResponse = (offerId, response) => {
+    setContractOffers(
+      (prev) => prev.map(
+        (offer) => offer.id === offerId ? { ...offer, status: response } : offer
+      )
+    );
+  };
+  const handlePlayerSelection = (player) => {
+    setSelectedPlayers((prev) => {
+      const isSelected = prev.find((p) => p.id === player.id);
+      if (isSelected) {
+        return prev.filter((p) => p.id !== player.id);
+      } else {
+        return [...prev, player];
+      }
+    });
+  };
+  const handleJoinTeamRequest = (team) => {
+    const newRequest = {
+      id: Date.now(),
+      playerName: "Jos\\xE9 dos Santos",
+      // Nome do usuário atual
+      playerId: "current-user",
+      teamName: team.name,
+      teamId: team.id,
+      position: "Meio-campo",
+      // Posição do jogador atual
+      date: (/* @__PURE__ */ new Date()).toLocaleDateString("pt-BR"),
+      status: "pending"
+      // pending, accepted, rejected
+    };
+    setJoinRequests((prev) => [...prev, newRequest]);
+    alert(\`Solicita\\xE7\\xE3o enviada para \${team.name}! Aguarde a resposta do time.\`);
+  };
+  const handleJoinRequestResponse = (requestId, response) => {
+    setJoinRequests(
+      (prev) => prev.map(
+        (request) => request.id === requestId ? { ...request, status: response } : request
+      )
+    );
+  };
+  const handleScheduleFriendlyMatch = (opponent) => {
+    const newMatch = {
+      id: Date.now(),
+      homeTeam: "Vila Nove F.C.",
+      // Time do usuário atual
+      homeTeamId: 1,
+      awayTeam: opponent === "random" ? "Time Aleat\\xF3rio" : opponent.name,
+      awayTeamId: opponent === "random" ? "random" : opponent.id,
+      date: (/* @__PURE__ */ new Date()).toLocaleDateString("pt-BR"),
+      time: "19:00",
+      // Horário padrão
+      location: "A definir",
+      status: "pending",
+      // pending, confirmed, cancelled
+      isRandom: opponent === "random"
+    };
+    setFriendlyMatches((prev) => [...prev, newMatch]);
+    if (opponent === "random") {
+      alert("Amistoso marcado! Aguarde outros times se interessarem.");
+    } else {
+      alert(\`Convite de amistoso enviado para \${opponent.name}! Aguarde a confirma\\xE7\\xE3o.\`);
+    }
+  };
+  const handleTimeSlotUpdate = (dayId, slotId, updates) => {
+    setFieldTimeSlots(
+      (prev) => prev.map(
+        (day) => day.id === dayId ? {
+          ...day,
+          timeSlots: day.timeSlots.map(
+            (slot) => slot.id === slotId ? { ...slot, ...updates } : slot
+          )
+        } : day
+      )
+    );
+  };
+  const handleAddTimeSlot = (dayId) => {
+    const newSlot = {
+      id: Date.now(),
+      time: "00:00 - 01:00",
+      price: 100,
+      available: true
+    };
+    setFieldTimeSlots(
+      (prev) => prev.map(
+        (day) => day.id === dayId ? { ...day, timeSlots: [...day.timeSlots, newSlot] } : day
+      )
+    );
+  };
+  const handleRemoveTimeSlot = (dayId, slotId) => {
+    setFieldTimeSlots(
+      (prev) => prev.map(
+        (day) => day.id === dayId ? { ...day, timeSlots: day.timeSlots.filter((slot) => slot.id !== slotId) } : day
+      )
+    );
+  };
+  const handleFriendlyMatchResponse = (matchId, response) => {
+    setFriendlyMatches(
+      (prev) => prev.map(
+        (match) => match.id === matchId ? { ...match, status: response } : match
+      )
+    );
+  };
+  const handleGameAction = (gameId, action) => {
+    if (action === "cancel") {
+      setTeamSchedule(
+        (prev) => prev.map(
+          (game) => game.id === gameId ? { ...game, status: "cancelado" } : game
+        )
+      );
+      alert("Jogo cancelado com sucesso!");
+    } else if (action === "reschedule") {
+      const newDate = prompt("Nova data (DD/MM/AAAA):", "05/09/2025");
+      const newTime = prompt("Novo hor\\xE1rio:", "19:30");
+      const newLocation = prompt("Novo local:", "Campo do Centro");
+      if (newDate && newTime && newLocation) {
+        setTeamSchedule(
+          (prev) => prev.map(
+            (game) => game.id === gameId ? {
+              ...game,
+              date: newDate,
+              time: newTime,
+              location: newLocation,
+              status: "pendente"
+              // Volta para pendente após remarcar
+            } : game
+          )
+        );
+        alert("Jogo remarcado com sucesso! Aguardando confirma\\xE7\\xE3o do advers\\xE1rio.");
+      }
+    } else if (action === "confirm") {
+      setTeamSchedule(
+        (prev) => prev.map(
+          (game) => game.id === gameId ? { ...game, status: "confirmado" } : game
+        )
+      );
+      alert("Jogo confirmado com sucesso!");
+    }
+  };
+  const StatusBar = () => /* @__PURE__ */ React.createElement("div", { className: "flex justify-between items-center text-white text-sm px-4 py-2" }, /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-1" }, /* @__PURE__ */ React.createElement("div", { className: "flex gap-1" }, /* @__PURE__ */ React.createElement("div", { className: "w-1 h-3 bg-white rounded" }), /* @__PURE__ */ React.createElement("div", { className: "w-1 h-3 bg-white rounded" }), /* @__PURE__ */ React.createElement("div", { className: "w-1 h-3 bg-white rounded" }), /* @__PURE__ */ React.createElement("div", { className: "w-1 h-3 bg-white/50 rounded" })), /* @__PURE__ */ React.createElement("div", { className: "ml-2 flex items-center gap-1" }, /* @__PURE__ */ React.createElement("div", { className: "w-4 h-2 bg-white rounded-sm" }))), /* @__PURE__ */ React.createElement("div", { className: "font-medium" }, currentScreen === "home" && "9:41", currentScreen === "myteam" && "9:41", currentScreen === "manager" && "", currentScreen === "tournaments" && "9:36"), /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-1" }, /* @__PURE__ */ React.createElement("div", { className: "flex gap-1" }, /* @__PURE__ */ React.createElement("div", { className: "w-1 h-3 bg-white rounded" }), /* @__PURE__ */ React.createElement("div", { className: "w-1 h-3 bg-white rounded" }), /* @__PURE__ */ React.createElement("div", { className: "w-1 h-3 bg-white rounded" }), /* @__PURE__ */ React.createElement("div", { className: "w-1 h-3 bg-white/50 rounded" })), /* @__PURE__ */ React.createElement("div", { className: "w-6 h-3 bg-white rounded-sm flex items-center justify-end pr-0.5" }, /* @__PURE__ */ React.createElement("div", { className: "w-4 h-2 bg-slate-800 rounded-sm" }))));
+  const HomeScreen = () => /* @__PURE__ */ React.createElement("div", { className: "bg-slate-800 min-h-screen" }, /* @__PURE__ */ React.createElement(StatusBar, null), /* @__PURE__ */ React.createElement("div", { className: "px-6 py-8" }, /* @__PURE__ */ React.createElement("h1", { className: "text-white text-4xl font-bold mb-8" }, "ArenaSobral"), /* @__PURE__ */ React.createElement("div", { className: "space-y-4" }, /* @__PURE__ */ React.createElement(
+    "button",
+    {
+      onClick: () => setCurrentScreen("login"),
+      className: "w-full bg-white rounded-xl p-4 flex items-center gap-4 shadow-lg"
+    },
+    /* @__PURE__ */ React.createElement("div", { className: "w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center" }, /* @__PURE__ */ React.createElement(User, { className: "w-6 h-6 text-white" })),
+    /* @__PURE__ */ React.createElement("div", { className: "flex-1 text-left" }, /* @__PURE__ */ React.createElement("span", { className: "text-lg font-medium text-slate-800 block" }, "Login ArenaSobral"), /* @__PURE__ */ React.createElement("span", { className: "text-sm text-slate-500" }, "Jogadores \\u2022 Donos de Time \\u2022 Areninhas"))
+  ), /* @__PURE__ */ React.createElement(
+    "button",
+    {
+      onClick: () => setCurrentScreen("searchteams"),
+      className: "w-full bg-white rounded-xl p-4 flex items-center gap-4 shadow-lg"
+    },
+    /* @__PURE__ */ React.createElement("div", { className: "w-12 h-12 bg-slate-600 rounded-xl flex items-center justify-center" }, /* @__PURE__ */ React.createElement(Calendar, { className: "w-6 h-6 text-white" })),
+    /* @__PURE__ */ React.createElement("span", { className: "text-lg font-medium text-slate-800" }, "Buscar Times")
+  ), /* @__PURE__ */ React.createElement(
+    "button",
+    {
+      onClick: () => setCurrentScreen("searchplayers"),
+      className: "w-full bg-white rounded-xl p-4 flex items-center gap-4 shadow-lg"
+    },
+    /* @__PURE__ */ React.createElement("div", { className: "w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center" }, /* @__PURE__ */ React.createElement(Users, { className: "w-6 h-6 text-white" })),
+    /* @__PURE__ */ React.createElement("span", { className: "text-lg font-medium text-slate-800" }, "Buscar Jogadores")
+  ), /* @__PURE__ */ React.createElement(
+    "button",
+    {
+      onClick: () => setCurrentScreen("playerboard"),
+      className: "w-full bg-white rounded-xl p-4 flex items-center gap-4 shadow-lg"
+    },
+    /* @__PURE__ */ React.createElement("div", { className: "w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center" }, /* @__PURE__ */ React.createElement(User, { className: "w-6 h-6 text-white" })),
+    /* @__PURE__ */ React.createElement("span", { className: "text-lg font-medium text-slate-800" }, "Painel do Jogador")
+  ), /* @__PURE__ */ React.createElement(
+    "button",
+    {
+      onClick: () => setCurrentScreen("teamowner"),
+      className: "w-full bg-white rounded-xl p-4 flex items-center gap-4 shadow-lg"
+    },
+    /* @__PURE__ */ React.createElement("div", { className: "w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center" }, /* @__PURE__ */ React.createElement(Users, { className: "w-6 h-6 text-white" })),
+    /* @__PURE__ */ React.createElement("span", { className: "text-lg font-medium text-slate-800" }, "Painel do Dono do Time")
+  ), /* @__PURE__ */ React.createElement(
+    "button",
+    {
+      onClick: () => setCurrentScreen("fieldowner"),
+      className: "w-full bg-white rounded-xl p-4 flex items-center gap-4 shadow-lg"
+    },
+    /* @__PURE__ */ React.createElement("div", { className: "w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center" }, /* @__PURE__ */ React.createElement(MapPin, { className: "w-6 h-6 text-white" })),
+    /* @__PURE__ */ React.createElement("span", { className: "text-lg font-medium text-slate-800" }, "Areninha Privada")
+  ), /* @__PURE__ */ React.createElement(
+    "button",
+    {
+      onClick: () => setCurrentScreen("fieldschedule"),
+      className: "w-full bg-white rounded-xl p-4 flex items-center gap-4 shadow-lg"
+    },
+    /* @__PURE__ */ React.createElement("div", { className: "w-12 h-12 bg-red-500 rounded-xl flex items-center justify-center" }, /* @__PURE__ */ React.createElement(Calendar, { className: "w-6 h-6 text-white" })),
+    /* @__PURE__ */ React.createElement("div", { className: "flex-1 text-left" }, /* @__PURE__ */ React.createElement("span", { className: "text-lg font-medium text-slate-800 block" }, "Gerenciar Hor\\xE1rios"), /* @__PURE__ */ React.createElement("span", { className: "text-sm text-slate-500" }, "Cadastrar hor\\xE1rios das quadras"))
+  ))));
+  const LoginScreen = () => /* @__PURE__ */ React.createElement("div", { className: "bg-slate-800 min-h-screen" }, /* @__PURE__ */ React.createElement(StatusBar, null), /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-4 px-4 py-4 text-white" }, /* @__PURE__ */ React.createElement("button", { onClick: () => setCurrentScreen("home") }, /* @__PURE__ */ React.createElement(ArrowLeft, { className: "w-6 h-6" })), /* @__PURE__ */ React.createElement("h1", { className: "text-xl font-bold" }, "Login ArenaSobral")), /* @__PURE__ */ React.createElement("div", { className: "px-4 py-8" }, /* @__PURE__ */ React.createElement("div", { className: "bg-white rounded-xl p-6" }, /* @__PURE__ */ React.createElement("div", { className: "text-center mb-6" }, /* @__PURE__ */ React.createElement("div", { className: "w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4" }, /* @__PURE__ */ React.createElement(User, { className: "w-10 h-10 text-blue-600" })), /* @__PURE__ */ React.createElement("h2", { className: "text-2xl font-bold text-slate-800 mb-2" }, "Bem-vindo ao ArenaSobral"), /* @__PURE__ */ React.createElement("p", { className: "text-slate-600" }, "Entre em sua conta para acessar todas as funcionalidades")), /* @__PURE__ */ React.createElement("div", { className: "mb-6" }, /* @__PURE__ */ React.createElement("label", { className: "text-slate-600 text-sm mb-2 block" }, "Email *"), /* @__PURE__ */ React.createElement(
+    "input",
+    {
+      type: "email",
+      className: "w-full border border-gray-200 rounded-lg px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500",
+      placeholder: "seu.email@exemplo.com"
+    }
+  )), /* @__PURE__ */ React.createElement("div", { className: "mb-6" }, /* @__PURE__ */ React.createElement("label", { className: "text-slate-600 text-sm mb-2 block" }, "Senha *"), /* @__PURE__ */ React.createElement(
+    "input",
+    {
+      type: "password",
+      className: "w-full border border-gray-200 rounded-lg px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500",
+      placeholder: "Sua senha"
+    }
+  )), /* @__PURE__ */ React.createElement("div", { className: "mb-6" }, /* @__PURE__ */ React.createElement("label", { className: "text-slate-600 text-sm mb-2 block" }, "Tipo de Conta *"), /* @__PURE__ */ React.createElement("div", { className: "space-y-3" }, /* @__PURE__ */ React.createElement("label", { className: "flex items-center gap-3 p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50" }, /* @__PURE__ */ React.createElement("input", { type: "radio", name: "userType", value: "player", className: "text-blue-500" }), /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-3" }, /* @__PURE__ */ React.createElement("div", { className: "w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center" }, /* @__PURE__ */ React.createElement(User, { className: "w-5 h-5 text-purple-600" })), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { className: "font-medium text-slate-800" }, "Jogador"), /* @__PURE__ */ React.createElement("div", { className: "text-sm text-slate-600" }, "Buscar times, participar de jogos")))), /* @__PURE__ */ React.createElement("label", { className: "flex items-center gap-3 p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50" }, /* @__PURE__ */ React.createElement("input", { type: "radio", name: "userType", value: "teamowner", className: "text-blue-500" }), /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-3" }, /* @__PURE__ */ React.createElement("div", { className: "w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center" }, /* @__PURE__ */ React.createElement(Users, { className: "w-5 h-5 text-green-600" })), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { className: "font-medium text-slate-800" }, "Dono de Time"), /* @__PURE__ */ React.createElement("div", { className: "text-sm text-slate-600" }, "Gerenciar equipe, marcar jogos")))), /* @__PURE__ */ React.createElement("label", { className: "flex items-center gap-3 p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50" }, /* @__PURE__ */ React.createElement("input", { type: "radio", name: "userType", value: "fieldowner", className: "text-blue-500" }), /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-3" }, /* @__PURE__ */ React.createElement("div", { className: "w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center" }, /* @__PURE__ */ React.createElement(MapPin, { className: "w-5 h-5 text-orange-600" })), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { className: "font-medium text-slate-800" }, "Dono de Areninha"), /* @__PURE__ */ React.createElement("div", { className: "text-sm text-slate-600" }, "Gerenciar quadra, hor\\xE1rios e reservas")))))), /* @__PURE__ */ React.createElement(
+    "button",
+    {
+      onClick: () => {
+        const userType = document.querySelector('input[name="userType"]:checked')?.value;
+        if (userType === "player") {
+          setCurrentScreen("playerboard");
+        } else if (userType === "teamowner") {
+          setCurrentScreen("teamowner");
+        } else if (userType === "fieldowner") {
+          setCurrentScreen("fieldownerpanel");
+        } else {
+          alert("Por favor, selecione o tipo de conta");
+        }
+      },
+      className: "w-full bg-blue-500 text-white font-medium py-3 rounded-lg mb-4 hover:bg-blue-600 transition"
+    },
+    "Entrar"
+  ), /* @__PURE__ */ React.createElement("div", { className: "text-center" }, /* @__PURE__ */ React.createElement("p", { className: "text-sm text-gray-600 mb-3" }, "Ainda n\\xE3o tem uma conta?"), /* @__PURE__ */ React.createElement(
+    "button",
+    {
+      onClick: () => setCurrentScreen("register"),
+      className: "text-blue-500 text-sm font-medium hover:text-blue-600 transition"
+    },
+    "Criar Conta Gr\\xE1tis"
+  )), /* @__PURE__ */ React.createElement("div", { className: "mt-6 pt-4 border-t border-gray-200" }, /* @__PURE__ */ React.createElement("p", { className: "text-xs text-gray-500 text-center mb-3" }, "Esqueceu a senha?"), /* @__PURE__ */ React.createElement("button", { className: "w-full bg-gray-100 text-gray-700 py-2 rounded-lg text-sm hover:bg-gray-200 transition" }, "Recuperar Senha")))));
+  const RegisterScreen = () => {
+    const [selectedUserType, setSelectedUserType] = useState("");
+    const handleUserTypeChange = (userType) => {
+      setSelectedUserType(userType);
+    };
+    return /* @__PURE__ */ React.createElement("div", { className: "bg-slate-800 min-h-screen" }, /* @__PURE__ */ React.createElement(StatusBar, null), /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-4 px-4 py-4 text-white" }, /* @__PURE__ */ React.createElement("button", { onClick: () => setCurrentScreen("login") }, /* @__PURE__ */ React.createElement(ArrowLeft, { className: "w-6 h-6" })), /* @__PURE__ */ React.createElement("h1", { className: "text-xl font-bold" }, "Criar Conta")), /* @__PURE__ */ React.createElement("div", { className: "px-4 py-4" }, /* @__PURE__ */ React.createElement("div", { className: "bg-white rounded-xl p-6" }, /* @__PURE__ */ React.createElement("div", { className: "text-center mb-6" }, /* @__PURE__ */ React.createElement("h2", { className: "text-2xl font-bold text-slate-800 mb-2" }, "Criar Sua Conta"), /* @__PURE__ */ React.createElement("p", { className: "text-slate-600" }, "Escolha o tipo de conta que melhor se adequa a voc\\xEA")), /* @__PURE__ */ React.createElement("div", { className: "mb-6" }, /* @__PURE__ */ React.createElement("label", { className: "text-slate-600 text-sm mb-2 block" }, "Nome Completo *"), /* @__PURE__ */ React.createElement(
+      "input",
+      {
+        type: "text",
+        className: "w-full border border-gray-200 rounded-lg px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500",
+        placeholder: "Seu nome completo"
+      }
+    )), /* @__PURE__ */ React.createElement("div", { className: "mb-6" }, /* @__PURE__ */ React.createElement("label", { className: "text-slate-600 text-sm mb-2 block" }, "Email *"), /* @__PURE__ */ React.createElement(
+      "input",
+      {
+        type: "email",
+        className: "w-full border border-gray-200 rounded-lg px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500",
+        placeholder: "seu.email@exemplo.com"
+      }
+    )), /* @__PURE__ */ React.createElement("div", { className: "mb-6" }, /* @__PURE__ */ React.createElement("label", { className: "text-slate-600 text-sm mb-2 block" }, "WhatsApp *"), /* @__PURE__ */ React.createElement(
+      "input",
+      {
+        type: "tel",
+        className: "w-full border border-gray-200 rounded-lg px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500",
+        placeholder: "(85) 99999-9999"
+      }
+    )), /* @__PURE__ */ React.createElement("div", { className: "mb-6" }, /* @__PURE__ */ React.createElement("label", { className: "text-slate-600 text-sm mb-2 block" }, "Senha *"), /* @__PURE__ */ React.createElement(
+      "input",
+      {
+        type: "password",
+        className: "w-full border border-gray-200 rounded-lg px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500",
+        placeholder: "Crie uma senha segura"
+      }
+    )), /* @__PURE__ */ React.createElement("div", { className: "mb-6" }, /* @__PURE__ */ React.createElement("label", { className: "text-slate-600 text-sm mb-2 block" }, "Confirmar Senha *"), /* @__PURE__ */ React.createElement(
+      "input",
+      {
+        type: "password",
+        className: "w-full border border-gray-200 rounded-lg px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500",
+        placeholder: "Confirme sua senha"
+      }
+    )), /* @__PURE__ */ React.createElement("div", { className: "mb-6" }, /* @__PURE__ */ React.createElement("label", { className: "text-slate-600 text-sm mb-2 block" }, "Tipo de Conta *"), /* @__PURE__ */ React.createElement("div", { className: "space-y-3" }, /* @__PURE__ */ React.createElement(
+      "label",
+      {
+        className: \`flex items-center gap-3 p-3 border-2 rounded-lg cursor-pointer transition \${selectedUserType === "player" ? "border-purple-500 bg-purple-50" : "border-gray-200 hover:bg-gray-50"}\`,
+        onClick: () => handleUserTypeChange("player")
+      },
+      /* @__PURE__ */ React.createElement(
+        "input",
+        {
+          type: "radio",
+          name: "registerUserType",
+          value: "player",
+          checked: selectedUserType === "player",
+          onChange: () => handleUserTypeChange("player"),
+          className: "text-purple-500"
+        }
+      ),
+      /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-3" }, /* @__PURE__ */ React.createElement("div", { className: "w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center" }, /* @__PURE__ */ React.createElement(User, { className: "w-5 h-5 text-purple-600" })), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { className: "font-medium text-slate-800" }, "Jogador"), /* @__PURE__ */ React.createElement("div", { className: "text-sm text-slate-600" }, "Buscar times, participar de jogos, marcar peladas")))
+    ), /* @__PURE__ */ React.createElement(
+      "label",
+      {
+        className: \`flex items-center gap-3 p-3 border-2 rounded-lg cursor-pointer transition \${selectedUserType === "teamowner" ? "border-green-500 bg-green-50" : "border-gray-200 hover:bg-gray-50"}\`,
+        onClick: () => handleUserTypeChange("teamowner")
+      },
+      /* @__PURE__ */ React.createElement(
+        "input",
+        {
+          type: "radio",
+          name: "registerUserType",
+          value: "teamowner",
+          checked: selectedUserType === "teamowner",
+          onChange: () => handleUserTypeChange("teamowner"),
+          className: "text-green-500"
+        }
+      ),
+      /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-3" }, /* @__PURE__ */ React.createElement("div", { className: "w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center" }, /* @__PURE__ */ React.createElement(Users, { className: "w-5 h-5 text-green-600" })), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { className: "font-medium text-slate-800" }, "Dono de Time"), /* @__PURE__ */ React.createElement("div", { className: "text-sm text-slate-600" }, "Gerenciar equipe, recrutar jogadores, marcar amistosos")))
+    ), /* @__PURE__ */ React.createElement(
+      "label",
+      {
+        className: \`flex items-center gap-3 p-3 border-2 rounded-lg cursor-pointer transition \${selectedUserType === "fieldowner" ? "border-orange-500 bg-orange-50" : "border-gray-200 hover:bg-gray-50"}\`,
+        onClick: () => handleUserTypeChange("fieldowner")
+      },
+      /* @__PURE__ */ React.createElement(
+        "input",
+        {
+          type: "radio",
+          name: "registerUserType",
+          value: "fieldowner",
+          checked: selectedUserType === "fieldowner",
+          onChange: () => handleUserTypeChange("fieldowner"),
+          className: "text-orange-500"
+        }
+      ),
+      /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-3" }, /* @__PURE__ */ React.createElement("div", { className: "w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center" }, /* @__PURE__ */ React.createElement(MapPin, { className: "w-5 h-5 text-orange-600" })), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { className: "font-medium text-slate-800" }, "Dono de Areninha"), /* @__PURE__ */ React.createElement("div", { className: "text-sm text-slate-600" }, "Cadastrar quadra, gerenciar hor\\xE1rios e reservas")))
+    ))), selectedUserType === "player" && /* @__PURE__ */ React.createElement("div", { className: "mb-6" }, /* @__PURE__ */ React.createElement("div", { className: "p-4 bg-purple-50 rounded-lg border-l-4 border-purple-500" }, /* @__PURE__ */ React.createElement("h4", { className: "font-bold text-purple-800 mb-3" }, "Informa\\xE7\\xF5es do Jogador"), /* @__PURE__ */ React.createElement("div", { className: "space-y-3" }, /* @__PURE__ */ React.createElement("div", { className: "grid grid-cols-2 gap-3" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("label", { className: "text-xs text-slate-500 mb-1 block" }, "Idade"), /* @__PURE__ */ React.createElement(
+      "input",
+      {
+        type: "number",
+        className: "w-full border border-gray-200 rounded-lg px-3 py-2 text-slate-800",
+        placeholder: "25",
+        min: "16",
+        max: "50"
+      }
+    )), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("label", { className: "text-xs text-slate-500 mb-1 block" }, "Posi\\xE7\\xE3o"), /* @__PURE__ */ React.createElement("select", { className: "w-full border border-gray-200 rounded-lg px-3 py-2 text-slate-800" }, /* @__PURE__ */ React.createElement("option", { value: "" }, "Selecione"), /* @__PURE__ */ React.createElement("option", { value: "goleiro" }, "Goleiro"), /* @__PURE__ */ React.createElement("option", { value: "zagueiro" }, "Zagueiro"), /* @__PURE__ */ React.createElement("option", { value: "meio-campo" }, "Meio-campo"), /* @__PURE__ */ React.createElement("option", { value: "atacante" }, "Atacante")))), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("label", { className: "text-xs text-slate-500 mb-1 block" }, "Categoria Preferida"), /* @__PURE__ */ React.createElement("select", { className: "w-full border border-gray-200 rounded-lg px-3 py-2 text-slate-800" }, /* @__PURE__ */ React.createElement("option", { value: "" }, "Selecione"), /* @__PURE__ */ React.createElement("option", { value: "racha" }, "Racha - futebol recreativo"), /* @__PURE__ */ React.createElement("option", { value: "sub20" }, "Sub20 - at\\xE9 20 anos"), /* @__PURE__ */ React.createElement("option", { value: "2q" }, "2Q - Segundo Quadro"), /* @__PURE__ */ React.createElement("option", { value: "1q" }, "1Q - Primeiro Quadro"), /* @__PURE__ */ React.createElement("option", { value: "veterano" }, "Veterano - acima de 35 anos"))), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("label", { className: "text-xs text-slate-500 mb-1 block" }, "Experi\\xEAncia"), /* @__PURE__ */ React.createElement("select", { className: "w-full border border-gray-200 rounded-lg px-3 py-2 text-slate-800" }, /* @__PURE__ */ React.createElement("option", { value: "" }, "Selecione"), /* @__PURE__ */ React.createElement("option", { value: "iniciante" }, "Iniciante (0-1 ano)"), /* @__PURE__ */ React.createElement("option", { value: "2-3anos" }, "2-3 anos"), /* @__PURE__ */ React.createElement("option", { value: "4-5anos" }, "4-5 anos"), /* @__PURE__ */ React.createElement("option", { value: "6-10anos" }, "6-10 anos"), /* @__PURE__ */ React.createElement("option", { value: "mais10anos" }, "Mais de 10 anos"))), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("label", { className: "text-xs text-slate-500 mb-1 block" }, "Disponibilidade"), /* @__PURE__ */ React.createElement("div", { className: "grid grid-cols-2 gap-2" }, /* @__PURE__ */ React.createElement("label", { className: "flex items-center gap-1 text-xs" }, /* @__PURE__ */ React.createElement("input", { type: "checkbox", className: "rounded" }), /* @__PURE__ */ React.createElement("span", null, "Manh\\xE3")), /* @__PURE__ */ React.createElement("label", { className: "flex items-center gap-1 text-xs" }, /* @__PURE__ */ React.createElement("input", { type: "checkbox", className: "rounded" }), /* @__PURE__ */ React.createElement("span", null, "Tarde")), /* @__PURE__ */ React.createElement("label", { className: "flex items-center gap-1 text-xs" }, /* @__PURE__ */ React.createElement("input", { type: "checkbox", className: "rounded" }), /* @__PURE__ */ React.createElement("span", null, "Noite")), /* @__PURE__ */ React.createElement("label", { className: "flex items-center gap-1 text-xs" }, /* @__PURE__ */ React.createElement("input", { type: "checkbox", className: "rounded" }), /* @__PURE__ */ React.createElement("span", null, "Final de Semana")))), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("label", { className: "text-xs text-slate-500 mb-1 block" }, "Altura e Peso (opcional)"), /* @__PURE__ */ React.createElement("div", { className: "grid grid-cols-2 gap-2" }, /* @__PURE__ */ React.createElement(
+      "input",
+      {
+        type: "text",
+        className: "border border-gray-200 rounded-lg px-2 py-1 text-slate-800 text-xs",
+        placeholder: "Altura (cm)"
+      }
+    ), /* @__PURE__ */ React.createElement(
+      "input",
+      {
+        type: "text",
+        className: "border border-gray-200 rounded-lg px-2 py-1 text-slate-800 text-xs",
+        placeholder: "Peso (kg)"
+      }
+    )))))), selectedUserType === "teamowner" && /* @__PURE__ */ React.createElement("div", { className: "mb-6" }, /* @__PURE__ */ React.createElement("div", { className: "p-4 bg-green-50 rounded-lg border-l-4 border-green-500" }, /* @__PURE__ */ React.createElement("h4", { className: "font-bold text-green-800 mb-3" }, "Informa\\xE7\\xF5es do Time"), /* @__PURE__ */ React.createElement("div", { className: "space-y-3" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("label", { className: "text-xs text-slate-500 mb-1 block" }, "Nome do Time"), /* @__PURE__ */ React.createElement(
+      "input",
+      {
+        type: "text",
+        className: "w-full border border-gray-200 rounded-lg px-3 py-2 text-slate-800",
+        placeholder: "Nome da sua equipe"
+      }
+    )), /* @__PURE__ */ React.createElement("div", { className: "grid grid-cols-2 gap-3" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("label", { className: "text-xs text-slate-500 mb-1 block" }, "Nome do Presidente"), /* @__PURE__ */ React.createElement(
+      "input",
+      {
+        type: "text",
+        className: "w-full border border-gray-200 rounded-lg px-3 py-2 text-slate-800",
+        placeholder: "Nome do presidente"
+      }
+    )), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("label", { className: "text-xs text-slate-500 mb-1 block" }, "Nome do T\\xE9cnico"), /* @__PURE__ */ React.createElement(
+      "input",
+      {
+        type: "text",
+        className: "w-full border border-gray-200 rounded-lg px-3 py-2 text-slate-800",
+        placeholder: "Nome do t\\xE9cnico"
+      }
+    ))), /* @__PURE__ */ React.createElement("div", { className: "grid grid-cols-2 gap-3" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("label", { className: "text-xs text-slate-500 mb-1 block" }, "Categoria do Time"), /* @__PURE__ */ React.createElement("select", { className: "w-full border border-gray-200 rounded-lg px-3 py-2 text-slate-800" }, /* @__PURE__ */ React.createElement("option", { value: "" }, "Selecione"), /* @__PURE__ */ React.createElement("option", { value: "racha" }, "Racha"), /* @__PURE__ */ React.createElement("option", { value: "sub20" }, "Sub20"), /* @__PURE__ */ React.createElement("option", { value: "2q" }, "2Q"), /* @__PURE__ */ React.createElement("option", { value: "1q" }, "1Q"), /* @__PURE__ */ React.createElement("option", { value: "veterano" }, "Veterano"))), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("label", { className: "text-xs text-slate-500 mb-1 block" }, "N\\xBA Jogadores Atual"), /* @__PURE__ */ React.createElement(
+      "input",
+      {
+        type: "number",
+        className: "w-full border border-gray-200 rounded-lg px-3 py-2 text-slate-800",
+        placeholder: "15",
+        min: "11"
+      }
+    ))), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("label", { className: "text-xs text-slate-500 mb-1 block" }, "Hor\\xE1rios Dispon\\xEDveis"), /* @__PURE__ */ React.createElement("div", { className: "grid grid-cols-2 gap-2" }, /* @__PURE__ */ React.createElement("label", { className: "flex items-center gap-1 text-xs" }, /* @__PURE__ */ React.createElement("input", { type: "checkbox", className: "rounded" }), /* @__PURE__ */ React.createElement("span", null, "Manh\\xE3")), /* @__PURE__ */ React.createElement("label", { className: "flex items-center gap-1 text-xs" }, /* @__PURE__ */ React.createElement("input", { type: "checkbox", className: "rounded" }), /* @__PURE__ */ React.createElement("span", null, "Tarde")), /* @__PURE__ */ React.createElement("label", { className: "flex items-center gap-1 text-xs" }, /* @__PURE__ */ React.createElement("input", { type: "checkbox", className: "rounded" }), /* @__PURE__ */ React.createElement("span", null, "Noite")), /* @__PURE__ */ React.createElement("label", { className: "flex items-center gap-1 text-xs" }, /* @__PURE__ */ React.createElement("input", { type: "checkbox", className: "rounded" }), /* @__PURE__ */ React.createElement("span", null, "Final de Semana")))), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("label", { className: "text-xs text-slate-500 mb-1 block" }, "Descri\\xE7\\xE3o do Time"), /* @__PURE__ */ React.createElement(
+      "textarea",
+      {
+        className: "w-full border border-gray-200 rounded-lg px-3 py-2 text-slate-800 h-16 resize-none text-xs",
+        placeholder: "Conte sobre seu time, objetivos, estilo de jogo..."
+      }
+    ))))), selectedUserType === "fieldowner" && /* @__PURE__ */ React.createElement("div", { className: "mb-6" }, /* @__PURE__ */ React.createElement("div", { className: "p-4 bg-orange-50 rounded-lg border-l-4 border-orange-500" }, /* @__PURE__ */ React.createElement("h4", { className: "font-bold text-orange-800 mb-3" }, "Informa\\xE7\\xF5es da Areninha"), /* @__PURE__ */ React.createElement("div", { className: "space-y-3" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("label", { className: "text-xs text-slate-500 mb-1 block" }, "Nome da Areninha"), /* @__PURE__ */ React.createElement(
+      "input",
+      {
+        type: "text",
+        className: "w-full border border-gray-200 rounded-lg px-3 py-2 text-slate-800",
+        placeholder: "Nome da sua areninha"
+      }
+    )), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("label", { className: "text-xs text-slate-500 mb-1 block" }, "Endere\\xE7o Completo"), /* @__PURE__ */ React.createElement(
+      "textarea",
+      {
+        className: "w-full border border-gray-200 rounded-lg px-3 py-2 text-slate-800 h-16 resize-none",
+        placeholder: "Rua, n\\xFAmero, bairro, cidade, CEP"
+      }
+    )), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("label", { className: "text-xs text-slate-500 mb-1 block" }, "Tipos de Quadra"), /* @__PURE__ */ React.createElement("div", { className: "grid grid-cols-2 gap-2" }, /* @__PURE__ */ React.createElement("label", { className: "flex items-center gap-1 text-xs" }, /* @__PURE__ */ React.createElement("input", { type: "checkbox", className: "rounded" }), /* @__PURE__ */ React.createElement("span", null, "Society")), /* @__PURE__ */ React.createElement("label", { className: "flex items-center gap-1 text-xs" }, /* @__PURE__ */ React.createElement("input", { type: "checkbox", className: "rounded" }), /* @__PURE__ */ React.createElement("span", null, "Futsal")), /* @__PURE__ */ React.createElement("label", { className: "flex items-center gap-1 text-xs" }, /* @__PURE__ */ React.createElement("input", { type: "checkbox", className: "rounded" }), /* @__PURE__ */ React.createElement("span", null, "Areia")), /* @__PURE__ */ React.createElement("label", { className: "flex items-center gap-1 text-xs" }, /* @__PURE__ */ React.createElement("input", { type: "checkbox", className: "rounded" }), /* @__PURE__ */ React.createElement("span", null, "Concreto")))), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("label", { className: "text-xs text-slate-500 mb-1 block" }, "Facilidades"), /* @__PURE__ */ React.createElement("div", { className: "grid grid-cols-2 gap-2" }, /* @__PURE__ */ React.createElement("label", { className: "flex items-center gap-1 text-xs" }, /* @__PURE__ */ React.createElement("input", { type: "checkbox", className: "rounded" }), /* @__PURE__ */ React.createElement("span", null, "Vesti\\xE1rio")), /* @__PURE__ */ React.createElement("label", { className: "flex items-center gap-1 text-xs" }, /* @__PURE__ */ React.createElement("input", { type: "checkbox", className: "rounded" }), /* @__PURE__ */ React.createElement("span", null, "Chuveiro")), /* @__PURE__ */ React.createElement("label", { className: "flex items-center gap-1 text-xs" }, /* @__PURE__ */ React.createElement("input", { type: "checkbox", className: "rounded" }), /* @__PURE__ */ React.createElement("span", null, "Estacionamento")), /* @__PURE__ */ React.createElement("label", { className: "flex items-center gap-1 text-xs" }, /* @__PURE__ */ React.createElement("input", { type: "checkbox", className: "rounded" }), /* @__PURE__ */ React.createElement("span", null, "Ilumina\\xE7\\xE3o")))), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("label", { className: "text-xs text-slate-500 mb-1 block" }, "Hor\\xE1rio de Funcionamento"), /* @__PURE__ */ React.createElement("div", { className: "grid grid-cols-2 gap-2" }, /* @__PURE__ */ React.createElement(
+      "input",
+      {
+        type: "time",
+        className: "border border-gray-200 rounded-lg px-2 py-1 text-slate-800 text-xs",
+        placeholder: "Abertura"
+      }
+    ), /* @__PURE__ */ React.createElement(
+      "input",
+      {
+        type: "time",
+        className: "border border-gray-200 rounded-lg px-2 py-1 text-slate-800 text-xs",
+        placeholder: "Fechamento"
+      }
+    ))), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("label", { className: "text-xs text-slate-500 mb-1 block" }, "Pre\\xE7os por Hora"), /* @__PURE__ */ React.createElement("div", { className: "space-y-2" }, /* @__PURE__ */ React.createElement("div", { className: "grid grid-cols-3 gap-2" }, /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-1" }, /* @__PURE__ */ React.createElement("span", { className: "text-xs" }, "Manh\\xE3 R\$"), /* @__PURE__ */ React.createElement(
+      "input",
+      {
+        type: "number",
+        className: "flex-1 border border-gray-200 rounded-lg px-2 py-1 text-slate-800 text-xs",
+        placeholder: "80"
+      }
+    )), /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-1" }, /* @__PURE__ */ React.createElement("span", { className: "text-xs" }, "Tarde R\$"), /* @__PURE__ */ React.createElement(
+      "input",
+      {
+        type: "number",
+        className: "flex-1 border border-gray-200 rounded-lg px-2 py-1 text-slate-800 text-xs",
+        placeholder: "100"
+      }
+    )), /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-1" }, /* @__PURE__ */ React.createElement("span", { className: "text-xs" }, "Noite R\$"), /* @__PURE__ */ React.createElement(
+      "input",
+      {
+        type: "number",
+        className: "flex-1 border border-gray-200 rounded-lg px-2 py-1 text-slate-800 text-xs",
+        placeholder: "120"
+      }
+    ))), /* @__PURE__ */ React.createElement("div", { className: "grid grid-cols-2 gap-2" }, /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-1" }, /* @__PURE__ */ React.createElement("span", { className: "text-xs" }, "Fim de Semana R\$"), /* @__PURE__ */ React.createElement(
+      "input",
+      {
+        type: "number",
+        className: "flex-1 border border-gray-200 rounded-lg px-2 py-1 text-slate-800 text-xs",
+        placeholder: "150"
+      }
+    )), /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-1" }, /* @__PURE__ */ React.createElement("span", { className: "text-xs" }, "Feriado R\$"), /* @__PURE__ */ React.createElement(
+      "input",
+      {
+        type: "number",
+        className: "flex-1 border border-gray-200 rounded-lg px-2 py-1 text-slate-800 text-xs",
+        placeholder: "180"
+      }
+    ))))), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("label", { className: "text-xs text-slate-500 mb-1 block" }, "Data de Cadastro"), /* @__PURE__ */ React.createElement(
+      "input",
+      {
+        type: "date",
+        className: "w-full border border-gray-200 rounded-lg px-3 py-2 text-slate-800 text-xs",
+        defaultValue: (/* @__PURE__ */ new Date()).toISOString().split("T")[0]
+      }
+    )), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("label", { className: "text-xs text-slate-500 mb-1 block" }, "Data de In\\xEDcio do Funcionamento"), /* @__PURE__ */ React.createElement(
+      "input",
+      {
+        type: "date",
+        className: "w-full border border-gray-200 rounded-lg px-3 py-2 text-slate-800 text-xs",
+        placeholder: "Quando a areninha come\\xE7ou a funcionar"
+      }
+    )), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("label", { className: "text-xs text-slate-500 mb-1 block" }, "Status de Funcionamento"), /* @__PURE__ */ React.createElement("select", { className: "w-full border border-gray-200 rounded-lg px-3 py-2 text-slate-800 text-xs" }, /* @__PURE__ */ React.createElement("option", { value: "" }, "Selecione"), /* @__PURE__ */ React.createElement("option", { value: "funcionando" }, "Funcionando Normalmente"), /* @__PURE__ */ React.createElement("option", { value: "reforma" }, "Em Reforma"), /* @__PURE__ */ React.createElement("option", { value: "manutencao" }, "Em Manuten\\xE7\\xE3o"), /* @__PURE__ */ React.createElement("option", { value: "fechado_temporario" }, "Fechado Temporariamente"), /* @__PURE__ */ React.createElement("option", { value: "inauguracao" }, "Aguardando Inaugura\\xE7\\xE3o"))), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("label", { className: "text-xs text-slate-500 mb-1 block" }, "Dias de Funcionamento"), /* @__PURE__ */ React.createElement("div", { className: "grid grid-cols-2 gap-2" }, /* @__PURE__ */ React.createElement("label", { className: "flex items-center gap-1 text-xs" }, /* @__PURE__ */ React.createElement("input", { type: "checkbox", className: "rounded", defaultChecked: true }), /* @__PURE__ */ React.createElement("span", null, "Segunda-feira")), /* @__PURE__ */ React.createElement("label", { className: "flex items-center gap-1 text-xs" }, /* @__PURE__ */ React.createElement("input", { type: "checkbox", className: "rounded", defaultChecked: true }), /* @__PURE__ */ React.createElement("span", null, "Ter\\xE7a-feira")), /* @__PURE__ */ React.createElement("label", { className: "flex items-center gap-1 text-xs" }, /* @__PURE__ */ React.createElement("input", { type: "checkbox", className: "rounded", defaultChecked: true }), /* @__PURE__ */ React.createElement("span", null, "Quarta-feira")), /* @__PURE__ */ React.createElement("label", { className: "flex items-center gap-1 text-xs" }, /* @__PURE__ */ React.createElement("input", { type: "checkbox", className: "rounded", defaultChecked: true }), /* @__PURE__ */ React.createElement("span", null, "Quinta-feira")), /* @__PURE__ */ React.createElement("label", { className: "flex items-center gap-1 text-xs" }, /* @__PURE__ */ React.createElement("input", { type: "checkbox", className: "rounded", defaultChecked: true }), /* @__PURE__ */ React.createElement("span", null, "Sexta-feira")), /* @__PURE__ */ React.createElement("label", { className: "flex items-center gap-1 text-xs" }, /* @__PURE__ */ React.createElement("input", { type: "checkbox", className: "rounded", defaultChecked: true }), /* @__PURE__ */ React.createElement("span", null, "S\\xE1bado")), /* @__PURE__ */ React.createElement("label", { className: "flex items-center gap-1 text-xs" }, /* @__PURE__ */ React.createElement("input", { type: "checkbox", className: "rounded" }), /* @__PURE__ */ React.createElement("span", null, "Domingo")))), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("label", { className: "text-xs text-slate-500 mb-2 block font-semibold" }, "Hor\\xE1rios de Funcionamento (Hora a Hora)"), /* @__PURE__ */ React.createElement("div", { className: "bg-gray-50 rounded-lg p-3 space-y-3" }, /* @__PURE__ */ React.createElement("div", { className: "text-xs text-gray-600 mb-2" }, "Configure os hor\\xE1rios dispon\\xEDveis para aluguel da quadra:"), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { className: "text-xs font-medium text-blue-600 mb-2" }, "\\u{1F305} Manh\\xE3 (06:00 - 11:59)"), /* @__PURE__ */ React.createElement("div", { className: "space-y-1" }, Array.from({ length: 6 }, (_, i) => {
+      const hour = 6 + i;
+      const timeSlot = \`\${hour.toString().padStart(2, "0")}:00 - \${(hour + 1).toString().padStart(2, "0")}:00\`;
+      const defaultPrice = 80;
+      return /* @__PURE__ */ React.createElement("div", { key: timeSlot, className: "bg-white rounded p-2 border border-gray-200" }, /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-2 mb-1" }, /* @__PURE__ */ React.createElement("input", { type: "checkbox", className: "rounded text-blue-500" }), /* @__PURE__ */ React.createElement("span", { className: "text-gray-700 text-xs font-medium" }, timeSlot)), /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-1 ml-5" }, /* @__PURE__ */ React.createElement("span", { className: "text-xs text-gray-600" }, "R\$"), /* @__PURE__ */ React.createElement(
+        "input",
+        {
+          type: "number",
+          className: "w-16 border border-gray-200 rounded px-2 py-1 text-xs",
+          defaultValue: defaultPrice,
+          min: "0",
+          step: "5"
+        }
+      ), /* @__PURE__ */ React.createElement("span", { className: "text-xs text-gray-500" }, "/hora")));
+    }))), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { className: "text-xs font-medium text-orange-600 mb-2" }, "\\u2600\\uFE0F Tarde (12:00 - 17:59)"), /* @__PURE__ */ React.createElement("div", { className: "space-y-1" }, Array.from({ length: 6 }, (_, i) => {
+      const hour = 12 + i;
+      const timeSlot = \`\${hour.toString().padStart(2, "0")}:00 - \${(hour + 1).toString().padStart(2, "0")}:00\`;
+      const defaultPrice = 100;
+      return /* @__PURE__ */ React.createElement("div", { key: timeSlot, className: "bg-white rounded p-2 border border-gray-200" }, /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-2 mb-1" }, /* @__PURE__ */ React.createElement("input", { type: "checkbox", className: "rounded text-orange-500", defaultChecked: true }), /* @__PURE__ */ React.createElement("span", { className: "text-gray-700 text-xs font-medium" }, timeSlot)), /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-1 ml-5" }, /* @__PURE__ */ React.createElement("span", { className: "text-xs text-gray-600" }, "R\$"), /* @__PURE__ */ React.createElement(
+        "input",
+        {
+          type: "number",
+          className: "w-16 border border-gray-200 rounded px-2 py-1 text-xs",
+          defaultValue: defaultPrice,
+          min: "0",
+          step: "5"
+        }
+      ), /* @__PURE__ */ React.createElement("span", { className: "text-xs text-gray-500" }, "/hora")));
+    }))), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { className: "text-xs font-medium text-purple-600 mb-2" }, "\\u{1F319} Noite (18:00 - 23:59)"), /* @__PURE__ */ React.createElement("div", { className: "space-y-1" }, Array.from({ length: 6 }, (_, i) => {
+      const hour = 18 + i;
+      const timeSlot = \`\${hour.toString().padStart(2, "0")}:00 - \${(hour + 1).toString().padStart(2, "0")}:00\`;
+      const defaultPrice = 120;
+      return /* @__PURE__ */ React.createElement("div", { key: timeSlot, className: "bg-white rounded p-2 border border-gray-200" }, /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-2 mb-1" }, /* @__PURE__ */ React.createElement("input", { type: "checkbox", className: "rounded text-purple-500", defaultChecked: true }), /* @__PURE__ */ React.createElement("span", { className: "text-gray-700 text-xs font-medium" }, timeSlot)), /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-1 ml-5" }, /* @__PURE__ */ React.createElement("span", { className: "text-xs text-gray-600" }, "R\$"), /* @__PURE__ */ React.createElement(
+        "input",
+        {
+          type: "number",
+          className: "w-16 border border-gray-200 rounded px-2 py-1 text-xs",
+          defaultValue: defaultPrice,
+          min: "0",
+          step: "5"
+        }
+      ), /* @__PURE__ */ React.createElement("span", { className: "text-xs text-gray-500" }, "/hora")));
+    }))), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { className: "text-xs font-medium text-gray-600 mb-2" }, "\\u{1F303} Madrugada (00:00 - 05:59)"), /* @__PURE__ */ React.createElement("div", { className: "space-y-1" }, Array.from({ length: 6 }, (_, i) => {
+      const hour = i;
+      const timeSlot = \`\${hour.toString().padStart(2, "0")}:00 - \${(hour + 1).toString().padStart(2, "0")}:00\`;
+      const defaultPrice = 150;
+      return /* @__PURE__ */ React.createElement("div", { key: timeSlot, className: "bg-white rounded p-2 border border-gray-200" }, /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-2 mb-1" }, /* @__PURE__ */ React.createElement("input", { type: "checkbox", className: "rounded text-gray-500" }), /* @__PURE__ */ React.createElement("span", { className: "text-gray-700 text-xs font-medium" }, timeSlot)), /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-1 ml-5" }, /* @__PURE__ */ React.createElement("span", { className: "text-xs text-gray-600" }, "R\$"), /* @__PURE__ */ React.createElement(
+        "input",
+        {
+          type: "number",
+          className: "w-16 border border-gray-200 rounded px-2 py-1 text-xs",
+          defaultValue: defaultPrice,
+          min: "0",
+          step: "5"
+        }
+      ), /* @__PURE__ */ React.createElement("span", { className: "text-xs text-gray-500" }, "/hora")));
+    }))), /* @__PURE__ */ React.createElement("div", { className: "border-t pt-2 mt-3" }, /* @__PURE__ */ React.createElement("div", { className: "text-xs text-gray-600 mb-2" }, "A\\xE7\\xF5es r\\xE1pidas:"), /* @__PURE__ */ React.createElement("div", { className: "flex gap-2" }, /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        className: "text-xs bg-green-100 text-green-700 px-2 py-1 rounded hover:bg-green-200",
+        onClick: () => {
+          const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+          checkboxes.forEach((cb) => cb.checked = true);
+        }
+      },
+      "Marcar Todos"
+    ), /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        className: "text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:bg-blue-200",
+        onClick: () => {
+          const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+          checkboxes.forEach((cb, index) => {
+            if (index >= 6 && index <= 17) {
+              cb.checked = true;
+            }
+          });
+        }
+      },
+      "Apenas Comercial"
+    ), /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        className: "text-xs bg-red-100 text-red-700 px-2 py-1 rounded hover:bg-red-200",
+        onClick: () => {
+          const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+          checkboxes.forEach((cb) => cb.checked = false);
+        }
+      },
+      "Limpar Todos"
+    ))), /* @__PURE__ */ React.createElement("div", { className: "text-xs text-gray-500 bg-blue-50 p-2 rounded" }, "\\u{1F4A1} ", /* @__PURE__ */ React.createElement("strong", null, "Dica:"), " Marque os hor\\xE1rios dispon\\xEDveis e defina o pre\\xE7o de cada um. Os valores podem ser ajustados individualmente conforme a demanda de cada per\\xEDodo."))), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("label", { className: "text-xs text-slate-500 mb-2 block font-semibold" }, "Cadastrar Hor\\xE1rio Individual"), /* @__PURE__ */ React.createElement("div", { className: "bg-blue-50 rounded-lg p-3 border border-blue-200" }, /* @__PURE__ */ React.createElement("div", { className: "text-xs text-blue-700 mb-3 font-medium" }, "\\u{1F4C5} Adicionar hor\\xE1rios espec\\xEDficos por quadra"), /* @__PURE__ */ React.createElement("div", { className: "space-y-3" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("label", { className: "text-xs text-slate-600 mb-1 block" }, "Selecionar Quadra"), /* @__PURE__ */ React.createElement("select", { className: "w-full border border-gray-200 rounded-lg px-3 py-2 text-slate-800 text-xs" }, /* @__PURE__ */ React.createElement("option", { value: "" }, "Selecione a quadra"), /* @__PURE__ */ React.createElement("option", { value: "quadra1" }, "Quadra 1"), /* @__PURE__ */ React.createElement("option", { value: "quadra2" }, "Quadra 2"), /* @__PURE__ */ React.createElement("option", { value: "quadra3" }, "Quadra 3"), /* @__PURE__ */ React.createElement("option", { value: "quadra4" }, "Quadra 4"))), /* @__PURE__ */ React.createElement("div", { className: "grid grid-cols-2 gap-3" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("label", { className: "text-xs text-slate-600 mb-1 block" }, "Hor\\xE1rio de In\\xEDcio"), /* @__PURE__ */ React.createElement(
+      "input",
+      {
+        type: "time",
+        className: "w-full border border-gray-200 rounded-lg px-3 py-2 text-slate-800 text-xs",
+        defaultValue: "18:00"
+      }
+    )), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("label", { className: "text-xs text-slate-600 mb-1 block" }, "Hor\\xE1rio de T\\xE9rmino"), /* @__PURE__ */ React.createElement(
+      "input",
+      {
+        type: "time",
+        className: "w-full border border-gray-200 rounded-lg px-3 py-2 text-slate-800 text-xs",
+        defaultValue: "19:00"
+      }
+    ))), /* @__PURE__ */ React.createElement("div", { className: "grid grid-cols-2 gap-3" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("label", { className: "text-xs text-slate-600 mb-1 block" }, "Pre\\xE7o (R\$)"), /* @__PURE__ */ React.createElement(
+      "input",
+      {
+        type: "number",
+        className: "w-full border border-gray-200 rounded-lg px-3 py-2 text-slate-800 text-xs",
+        placeholder: "120",
+        min: "0",
+        step: "10"
+      }
+    )), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("label", { className: "text-xs text-slate-600 mb-1 block" }, "Dia da Semana"), /* @__PURE__ */ React.createElement("select", { className: "w-full border border-gray-200 rounded-lg px-3 py-2 text-slate-800 text-xs" }, /* @__PURE__ */ React.createElement("option", { value: "" }, "Selecione"), /* @__PURE__ */ React.createElement("option", { value: "segunda" }, "Segunda-feira"), /* @__PURE__ */ React.createElement("option", { value: "terca" }, "Ter\\xE7a-feira"), /* @__PURE__ */ React.createElement("option", { value: "quarta" }, "Quarta-feira"), /* @__PURE__ */ React.createElement("option", { value: "quinta" }, "Quinta-feira"), /* @__PURE__ */ React.createElement("option", { value: "sexta" }, "Sexta-feira"), /* @__PURE__ */ React.createElement("option", { value: "sabado" }, "S\\xE1bado"), /* @__PURE__ */ React.createElement("option", { value: "domingo" }, "Domingo"), /* @__PURE__ */ React.createElement("option", { value: "todos" }, "Todos os dias")))), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("label", { className: "text-xs text-slate-600 mb-1 block" }, "Observa\\xE7\\xF5es (opcional)"), /* @__PURE__ */ React.createElement(
+      "input",
+      {
+        type: "text",
+        className: "w-full border border-gray-200 rounded-lg px-3 py-2 text-slate-800 text-xs",
+        placeholder: "Ex: Hor\\xE1rio nobre, Desconto especial, etc."
+      }
+    )), /* @__PURE__ */ React.createElement("div", { className: "flex gap-2 pt-2" }, /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        className: "flex-1 bg-green-500 text-white py-2 px-4 rounded-lg text-xs font-bold hover:bg-green-600 transition shadow-md flex items-center justify-center gap-1"
+      },
+      /* @__PURE__ */ React.createElement("span", null, "+"),
+      "Cadastrar Hor\\xE1rio"
+    ), /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        className: "flex-1 bg-blue-500 text-white py-2 px-4 rounded-lg text-xs font-bold hover:bg-blue-600 transition shadow-md flex items-center justify-center gap-1"
+      },
+      /* @__PURE__ */ React.createElement("span", null, "\\u{1F4CB}"),
+      "Adicionar Hor\\xE1rio"
+    )), /* @__PURE__ */ React.createElement("div", { className: "bg-white rounded p-2 border border-gray-100 mt-3" }, /* @__PURE__ */ React.createElement("div", { className: "text-xs text-gray-600 font-medium mb-2" }, "Hor\\xE1rios Cadastrados:"), /* @__PURE__ */ React.createElement("div", { className: "space-y-1 max-h-24 overflow-y-auto" }, /* @__PURE__ */ React.createElement("div", { className: "text-xs bg-gray-50 p-2 rounded border-l-4 border-green-400 flex justify-between items-center" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("strong", null, "Quadra 1:"), " 18:00-19:00", /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("span", { className: "text-green-600 font-semibold" }, "\\u{1F4B0} R\$ 120,00"), " | Segunda-feira"), /* @__PURE__ */ React.createElement("button", { className: "text-red-500 hover:text-red-700 ml-2" }, "\\u{1F5D1}\\uFE0F")), /* @__PURE__ */ React.createElement("div", { className: "text-xs bg-gray-50 p-2 rounded border-l-4 border-blue-400 flex justify-between items-center" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("strong", null, "Quadra 2:"), " 19:00-20:00", /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("span", { className: "text-blue-600 font-semibold" }, "\\u{1F4B0} R\$ 150,00"), " | Ter\\xE7a-feira"), /* @__PURE__ */ React.createElement("button", { className: "text-red-500 hover:text-red-700 ml-2" }, "\\u{1F5D1}\\uFE0F")), /* @__PURE__ */ React.createElement("div", { className: "text-xs bg-gray-50 p-2 rounded border-l-4 border-purple-400 flex justify-between items-center" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("strong", null, "Quadra 3:"), " 20:00-21:00", /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("span", { className: "text-purple-600 font-semibold" }, "\\u{1F4B0} R\$ 180,00"), " | Fim de semana"), /* @__PURE__ */ React.createElement("button", { className: "text-red-500 hover:text-red-700 ml-2" }, "\\u{1F5D1}\\uFE0F")), /* @__PURE__ */ React.createElement("div", { className: "text-xs bg-gray-50 p-2 rounded border-l-4 border-orange-400 flex justify-between items-center" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("strong", null, "Quadra 4:"), " 21:00-22:00", /* @__PURE__ */ React.createElement("br", null), /* @__PURE__ */ React.createElement("span", { className: "text-orange-600 font-semibold" }, "\\u{1F4B0} R\$ 200,00"), " | Todos os dias"), /* @__PURE__ */ React.createElement("button", { className: "text-red-500 hover:text-red-700 ml-2" }, "\\u{1F5D1}\\uFE0F")), /* @__PURE__ */ React.createElement("div", { className: "text-xs text-gray-400 italic text-center py-1" }, "\\u2705 4 hor\\xE1rios configurados"))), /* @__PURE__ */ React.createElement("div", { className: "text-xs text-blue-600 bg-white p-2 rounded border border-blue-200" }, /* @__PURE__ */ React.createElement("strong", null, "\\u{1F4A1} Como usar:"), /* @__PURE__ */ React.createElement("br", null), "1. Selecione a quadra", /* @__PURE__ */ React.createElement("br", null), "2. Defina in\\xEDcio (18h) e t\\xE9rmino (19h)", /* @__PURE__ */ React.createElement("br", null), "3. Configure pre\\xE7o e dia", /* @__PURE__ */ React.createElement("br", null), '4. Clique em "Cadastrar Hor\\xE1rio" para salvar', /* @__PURE__ */ React.createElement("br", null), '5. Use "Adicionar Hor\\xE1rio" para criar mais slots'))))))), /* @__PURE__ */ React.createElement("div", { className: "mb-6" }, /* @__PURE__ */ React.createElement("label", { className: "text-slate-600 text-sm mb-2 block" }, "Localiza\\xE7\\xE3o (Bairro/Regi\\xE3o) *"), /* @__PURE__ */ React.createElement(
+      "input",
+      {
+        type: "text",
+        className: "w-full border border-gray-200 rounded-lg px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500",
+        placeholder: "Seu bairro ou regi\\xE3o em Sobral"
+      }
+    )), /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        onClick: () => {
+          if (selectedUserType) {
+            alert("Conta criada com sucesso! Agora voc\\xEA pode fazer login.");
+            setCurrentScreen("login");
+          } else {
+            alert("Por favor, selecione o tipo de conta");
+          }
+        },
+        className: "w-full bg-blue-500 text-white font-medium py-3 rounded-lg mb-4 hover:bg-blue-600 transition"
+      },
+      "Criar Conta"
+    ), /* @__PURE__ */ React.createElement("div", { className: "text-center" }, /* @__PURE__ */ React.createElement("p", { className: "text-sm text-gray-600 mb-3" }, "J\\xE1 tem uma conta?"), /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        onClick: () => setCurrentScreen("login"),
+        className: "text-blue-500 text-sm font-medium hover:text-blue-600 transition"
+      },
+      "Fazer Login"
+    )), /* @__PURE__ */ React.createElement("p", { className: "text-xs text-gray-500 text-center mt-4" }, "Ao criar sua conta, voc\\xEA concorda com nossos termos de uso e pol\\xEDtica de privacidade"))));
+  };
+  const FieldScheduleScreen = () => {
+    const [selectedDate, setSelectedDate] = useState("08/08/2025");
+    const [selectedSport, setSelectedSport] = useState("Beach Tennis");
+    const [selectedPeriod, setSelectedPeriod] = useState("Madrugada");
+    const sports = ["Beach Tennis", "Futebol", "V\\xF4lei", "Futsal"];
+    const periods = ["Madrugada", "Manh\\xE3", "Tarde", "Noite"];
+    const timeSlots = ["18:00", "19:00", "20:00", "21:00", "22:00", "23:00", "00:00"];
+    const [fieldAvailability, setFieldAvailability] = useState({
+      "QUADRA 1": {
+        "18:00": "Indispon\\xEDvel",
+        "19:00": "Indispon\\xEDvel",
+        "20:00": "Indispon\\xEDvel",
+        "21:00": "Indispon\\xEDvel",
+        "22:00": "Dispon\\xEDvel",
+        "23:00": "Dispon\\xEDvel",
+        "00:00": "Dispon\\xEDvel"
+      },
+      "QUADRA 2": {
+        "18:00": "Indispon\\xEDvel",
+        "19:00": "Indispon\\xEDvel",
+        "20:00": "Indispon\\xEDvel",
+        "21:00": "Indispon\\xEDvel",
+        "22:00": "Dispon\\xEDvel",
+        "23:00": "Dispon\\xEDvel",
+        "00:00": "Dispon\\xEDvel"
+      },
+      "QUADRA 3": {
+        "18:00": "Indispon\\xEDvel",
+        "19:00": "Indispon\\xEDvel",
+        "20:00": "Indispon\\xEDvel",
+        "21:00": "Indispon\\xEDvel",
+        "22:00": "Dispon\\xEDvel",
+        "23:00": "Dispon\\xEDvel",
+        "00:00": "Dispon\\xEDvel"
+      },
+      "QUADRA 4": {
+        "18:00": "Indispon\\xEDvel",
+        "19:00": "Indispon\\xEDvel",
+        "20:00": "Indispon\\xEDvel",
+        "21:00": "Indispon\\xEDvel",
+        "22:00": "Dispon\\xEDvel",
+        "23:00": "Dispon\\xEDvel",
+        "00:00": "Dispon\\xEDvel"
+      }
+    });
+    const toggleAvailability = (quadra, horario) => {
+      setFieldAvailability((prev) => ({
+        ...prev,
+        [quadra]: {
+          ...prev[quadra],
+          [horario]: prev[quadra][horario] === "Dispon\\xEDvel" ? "Indispon\\xEDvel" : "Dispon\\xEDvel"
+        }
+      }));
+    };
+    return /* @__PURE__ */ React.createElement("div", { className: "bg-slate-700 min-h-screen" }, /* @__PURE__ */ React.createElement(StatusBar, null), /* @__PURE__ */ React.createElement("div", { className: "p-4" }, /* @__PURE__ */ React.createElement("div", { className: "bg-white rounded-2xl overflow-hidden shadow-xl max-w-sm mx-auto" }, /* @__PURE__ */ React.createElement("div", { className: "bg-slate-700 text-white px-4 py-5" }, /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-3 mb-4" }, /* @__PURE__ */ React.createElement("button", { onClick: () => setCurrentScreen("home"), className: "text-white hover:text-gray-200" }, /* @__PURE__ */ React.createElement(ArrowLeft, { className: "w-5 h-5" })), /* @__PURE__ */ React.createElement("h1", { className: "text-lg font-bold text-white" }, "FA\\xC7A SUA RESERVA")), /* @__PURE__ */ React.createElement("div", { className: "space-y-3" }, /* @__PURE__ */ React.createElement("div", { className: "grid grid-cols-2 gap-3" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("label", { className: "block text-xs font-medium mb-1 text-gray-200" }, "ESPORTE:"), /* @__PURE__ */ React.createElement(
+      "select",
+      {
+        value: selectedSport,
+        onChange: (e) => setSelectedSport(e.target.value),
+        className: "w-full bg-white text-slate-800 px-2 py-1.5 rounded text-xs border-0 focus:ring-2 focus:ring-blue-400"
+      },
+      sports.map((sport) => /* @__PURE__ */ React.createElement("option", { key: sport, value: sport }, sport))
+    )), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("label", { className: "block text-xs font-medium mb-1 text-gray-200" }, "Data:"), /* @__PURE__ */ React.createElement("div", { className: "flex items-center bg-white rounded overflow-hidden" }, /* @__PURE__ */ React.createElement("select", { className: "flex-1 bg-white text-slate-800 px-2 py-1.5 text-xs border-0" }, /* @__PURE__ */ React.createElement("option", null, "08/08/2025")), /* @__PURE__ */ React.createElement("div", { className: "p-1.5 bg-blue-500" }, /* @__PURE__ */ React.createElement(Calendar, { className: "w-3 h-3 text-white" }))))), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("label", { className: "block text-xs font-medium mb-1 text-gray-200" }, "Per\\xEDodo:"), /* @__PURE__ */ React.createElement("div", { className: "flex gap-1" }, periods.map((period) => /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        key: period,
+        onClick: () => setSelectedPeriod(period),
+        className: \`px-3 py-1 text-xs rounded font-medium transition \${selectedPeriod === period ? "bg-blue-500 text-white shadow-md" : "bg-gray-200 text-slate-700 hover:bg-gray-300"}\`
+      },
+      period
+    )))))), /* @__PURE__ */ React.createElement("div", { className: "bg-gray-50 p-3" }, /* @__PURE__ */ React.createElement("div", { className: "grid grid-cols-8 gap-1" }, /* @__PURE__ */ React.createElement("div", null), " ", timeSlots.map((time) => /* @__PURE__ */ React.createElement("div", { key: time, className: "text-center font-bold bg-orange-400 text-white py-2 px-1 rounded text-xs" }, time)))), /* @__PURE__ */ React.createElement("div", { className: "p-3 bg-white" }, Object.entries(fieldAvailability).map(([quadra, horarios], index) => /* @__PURE__ */ React.createElement("div", { key: quadra, className: "grid grid-cols-8 gap-1 mb-2" }, /* @__PURE__ */ React.createElement("div", { className: \`py-2 px-2 font-bold text-center text-white rounded text-xs flex items-center justify-center \${index === 0 ? "bg-blue-500" : index === 1 ? "bg-orange-500" : index === 2 ? "bg-purple-500" : "bg-green-500"}\` }, quadra), timeSlots.map((time) => /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        key: \`\${quadra}-\${time}\`,
+        onClick: () => toggleAvailability(quadra, time),
+        className: \`py-2 px-1 text-center rounded text-xs font-medium transition-all border \${horarios[time] === "Dispon\\xEDvel" ? "bg-green-100 text-green-700 border-green-300 hover:bg-green-200 shadow-sm" : "bg-gray-100 text-gray-500 border-gray-200 hover:bg-gray-150"}\`
+      },
+      horarios[time] === "Dispon\\xEDvel" ? "Dispon\\xEDvel" : "Indispon\\xEDvel"
+    ))))), /* @__PURE__ */ React.createElement("div", { className: "p-4 bg-white border-t border-gray-100" }, /* @__PURE__ */ React.createElement("div", { className: "flex gap-2 mb-4" }, /* @__PURE__ */ React.createElement("button", { className: "flex-1 bg-blue-500 text-white py-2.5 px-4 rounded-lg text-xs font-bold hover:bg-blue-600 transition shadow-md" }, "Salvar Altera\\xE7\\xF5es"), /* @__PURE__ */ React.createElement("button", { className: "flex-1 bg-gray-400 text-white py-2.5 px-4 rounded-lg text-xs font-bold hover:bg-gray-500 transition shadow-md" }, "Limpar Sele\\xE7\\xE3o")), /* @__PURE__ */ React.createElement("div", { className: "space-y-2" }, /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-3 text-xs" }, /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-1" }, /* @__PURE__ */ React.createElement("div", { className: "w-3 h-3 bg-green-400 rounded-full" }), /* @__PURE__ */ React.createElement("span", { className: "text-gray-700 font-medium" }, "Dispon\\xEDvel")), /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-1" }, /* @__PURE__ */ React.createElement("div", { className: "w-3 h-3 bg-gray-400 rounded-full" }), /* @__PURE__ */ React.createElement("span", { className: "text-gray-700 font-medium" }, "Indispon\\xEDvel"))), /* @__PURE__ */ React.createElement("p", { className: "text-xs text-gray-600 leading-relaxed" }, "Clique nos hor\\xE1rios para alterar disponibilidade. Quadras dispon\\xEDveis podem ser reservadas pelos usu\\xE1rios."))))));
+  };
+  const SearchTeamsScreen = () => /* @__PURE__ */ React.createElement("div", { className: "bg-slate-800 min-h-screen" }, /* @__PURE__ */ React.createElement(StatusBar, null), /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-4 px-4 py-4 text-white" }, /* @__PURE__ */ React.createElement("button", { onClick: () => setCurrentScreen("home") }, /* @__PURE__ */ React.createElement(ArrowLeft, { className: "w-6 h-6" })), /* @__PURE__ */ React.createElement("h1", { className: "text-xl font-bold" }, "Buscar Times")), /* @__PURE__ */ React.createElement("div", { className: "px-4 py-4" }, /* @__PURE__ */ React.createElement("div", { className: "bg-white rounded-xl p-4 mb-4" }, /* @__PURE__ */ React.createElement(
+    "input",
+    {
+      type: "text",
+      className: "w-full border border-gray-200 rounded-lg px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500",
+      placeholder: "Buscar times por nome, categoria ou localiza\\xE7\\xE3o..."
+    }
+  )), /* @__PURE__ */ React.createElement("div", { className: "space-y-4" }, registeredTeams.map((team) => /* @__PURE__ */ React.createElement("div", { key: team.id, className: "bg-white rounded-xl p-4 shadow-lg" }, /* @__PURE__ */ React.createElement("div", { className: "flex justify-between items-start mb-3" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h3", { className: "text-lg font-bold text-slate-800" }, team.name), /* @__PURE__ */ React.createElement("p", { className: "text-sm text-gray-600" }, team.location, " \\u2022 ", team.category)), /* @__PURE__ */ React.createElement("div", { className: "text-right" }, /* @__PURE__ */ React.createElement("div", { className: "text-sm text-gray-600" }, team.players, " jogadores"))), /* @__PURE__ */ React.createElement("div", { className: "mb-3" }, /* @__PURE__ */ React.createElement("p", { className: "text-sm text-gray-700 mb-1" }, /* @__PURE__ */ React.createElement("strong", null, "Capit\\xE3o:"), " ", team.captain), /* @__PURE__ */ React.createElement("p", { className: "text-sm text-gray-700" }, /* @__PURE__ */ React.createElement("strong", null, "WhatsApp:"), " ", team.whatsapp)), /* @__PURE__ */ React.createElement(
+    "button",
+    {
+      onClick: () => handleJoinTeamRequest(team),
+      className: "w-full bg-blue-500 text-white py-2 rounded-lg font-medium hover:bg-blue-600 transition"
+    },
+    "Solicitar Entrada"
+  ))))));
+  const SearchPlayersScreen = () => /* @__PURE__ */ React.createElement("div", { className: "bg-slate-800 min-h-screen" }, /* @__PURE__ */ React.createElement(StatusBar, null), /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-4 px-4 py-4 text-white" }, /* @__PURE__ */ React.createElement("button", { onClick: () => setCurrentScreen("home") }, /* @__PURE__ */ React.createElement(ArrowLeft, { className: "w-6 h-6" })), /* @__PURE__ */ React.createElement("h1", { className: "text-xl font-bold" }, "Buscar Jogadores")), /* @__PURE__ */ React.createElement("div", { className: "px-4 py-4" }, /* @__PURE__ */ React.createElement("div", { className: "bg-white rounded-xl p-4 mb-4" }, /* @__PURE__ */ React.createElement(
+    "input",
+    {
+      type: "text",
+      className: "w-full border border-gray-200 rounded-lg px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500",
+      placeholder: "Buscar jogadores por nome, posi\\xE7\\xE3o ou localiza\\xE7\\xE3o..."
+    }
+  )), /* @__PURE__ */ React.createElement("div", { className: "space-y-4" }, registeredPlayers.map((player) => /* @__PURE__ */ React.createElement("div", { key: player.id, className: "bg-white rounded-xl p-4 shadow-lg" }, /* @__PURE__ */ React.createElement("div", { className: "flex gap-4" }, /* @__PURE__ */ React.createElement("div", { className: "w-16 h-16 bg-gray-200 rounded-lg overflow-hidden" }, /* @__PURE__ */ React.createElement("img", { src: player.photo, alt: player.name, className: "w-full h-full object-cover" })), /* @__PURE__ */ React.createElement("div", { className: "flex-1" }, /* @__PURE__ */ React.createElement("div", { className: "flex justify-between items-start mb-2" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h3", { className: "text-lg font-bold text-slate-800" }, player.name), /* @__PURE__ */ React.createElement("p", { className: "text-sm text-gray-600" }, player.age, " anos \\u2022 ", player.position))), /* @__PURE__ */ React.createElement("div", { className: "grid grid-cols-2 gap-2 text-xs text-gray-600 mb-3" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("strong", null, "Localiza\\xE7\\xE3o:"), " ", player.location), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("strong", null, "Experi\\xEAncia:"), " ", player.experience), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("strong", null, "Disponibilidade:"), " ", player.availability), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("strong", null, "Time Atual:"), " ", player.currentTeam)), /* @__PURE__ */ React.createElement(
+    "button",
+    {
+      onClick: () => handleContactPlayer(player),
+      className: "w-full bg-green-500 text-white py-2 rounded-lg font-medium hover:bg-green-600 transition"
+    },
+    "Fazer Proposta"
+  ))))))));
+  const PlayerBoardScreen = () => /* @__PURE__ */ React.createElement("div", { className: "bg-slate-800 min-h-screen" }, /* @__PURE__ */ React.createElement(StatusBar, null), /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-4 px-4 py-4 text-white" }, /* @__PURE__ */ React.createElement("button", { onClick: () => setCurrentScreen("home") }, /* @__PURE__ */ React.createElement(ArrowLeft, { className: "w-6 h-6" })), /* @__PURE__ */ React.createElement("h1", { className: "text-xl font-bold" }, "Painel do Jogador")), /* @__PURE__ */ React.createElement("div", { className: "px-4 py-4" }, /* @__PURE__ */ React.createElement("div", { className: "bg-white rounded-xl p-4 mb-4" }, /* @__PURE__ */ React.createElement("h2", { className: "text-xl font-bold text-slate-800 mb-4" }, "Bem-vindo, Jos\\xE9!"), /* @__PURE__ */ React.createElement("div", { className: "grid grid-cols-2 gap-4 mb-4" }, /* @__PURE__ */ React.createElement("div", { className: "bg-blue-50 p-3 rounded-lg" }, /* @__PURE__ */ React.createElement("div", { className: "text-2xl font-bold text-blue-600" }, contractOffers.length), /* @__PURE__ */ React.createElement("div", { className: "text-sm text-blue-800" }, "Propostas")), /* @__PURE__ */ React.createElement("div", { className: "bg-green-50 p-3 rounded-lg" }, /* @__PURE__ */ React.createElement("div", { className: "text-2xl font-bold text-green-600" }, joinRequests.length), /* @__PURE__ */ React.createElement("div", { className: "text-sm text-green-800" }, "Solicita\\xE7\\xF5es"))), contractOffers.length > 0 && /* @__PURE__ */ React.createElement("div", { className: "mb-4" }, /* @__PURE__ */ React.createElement("h3", { className: "font-bold text-slate-800 mb-2" }, "Propostas Recebidas:"), /* @__PURE__ */ React.createElement("div", { className: "space-y-2" }, contractOffers.map((offer) => /* @__PURE__ */ React.createElement("div", { key: offer.id, className: "bg-blue-50 p-3 rounded-lg" }, /* @__PURE__ */ React.createElement("div", { className: "flex justify-between items-start" }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("p", { className: "font-medium text-slate-800" }, offer.teamName), /* @__PURE__ */ React.createElement("p", { className: "text-sm text-gray-600" }, "Posi\\xE7\\xE3o: ", offer.position), /* @__PURE__ */ React.createElement("p", { className: "text-xs text-gray-500" }, offer.date)), /* @__PURE__ */ React.createElement("div", { className: "flex gap-2" }, /* @__PURE__ */ React.createElement(
+    "button",
+    {
+      onClick: () => handleOfferResponse(offer.id, "accepted"),
+      className: "bg-green-500 text-white px-3 py-1 rounded text-xs"
+    },
+    "Aceitar"
+  ), /* @__PURE__ */ React.createElement(
+    "button",
+    {
+      onClick: () => handleOfferResponse(offer.id, "rejected"),
+      className: "bg-red-500 text-white px-3 py-1 rounded text-xs"
+    },
+    "Recusar"
+  )))))))), /* @__PURE__ */ React.createElement("div", { className: "space-y-4" }, /* @__PURE__ */ React.createElement(
+    "button",
+    {
+      onClick: () => setCurrentScreen("searchteams"),
+      className: "w-full bg-blue-500 text-white rounded-xl p-4 flex items-center gap-4 shadow-lg"
+    },
+    /* @__PURE__ */ React.createElement(Users, { className: "w-6 h-6" }),
+    /* @__PURE__ */ React.createElement("span", { className: "text-lg font-medium" }, "Buscar Times")
+  ), /* @__PURE__ */ React.createElement(
+    "button",
+    {
+      onClick: () => setCurrentScreen("tournaments"),
+      className: "w-full bg-green-500 text-white rounded-xl p-4 flex items-center gap-4 shadow-lg"
+    },
+    /* @__PURE__ */ React.createElement(Trophy, { className: "w-6 h-6" }),
+    /* @__PURE__ */ React.createElement("span", { className: "text-lg font-medium" }, "Torneios")
+  ))));
+  const TeamOwnerScreen = () => /* @__PURE__ */ React.createElement("div", { className: "bg-slate-800 min-h-screen" }, /* @__PURE__ */ React.createElement(StatusBar, null), /* @__PURE__ */ React.createElement("div", { className: "flex items-center gap-4 px-4 py-4 text-white" }, /* @__PURE__ */ React.createElement("button", { onClick: () => setCurrentScreen("home") }, /* @__PURE__ */ React.createElement(ArrowLeft, { className: "w-6 h-6" })), /* @__PURE__ */ React.createElement("h1", { className: "text-xl font-bold" }, "Painel do Dono do Time")), /* @__PURE__ */ React.createElement("div", { className: "px-4 py-4" }, /* @__PURE__ */ React.createElement("div", { className: "bg-white rounded-xl p-4 mb-4" }, /* @__PURE__ */ React.createElement("h2", { className: "text-xl font-bold text-slate-800 mb-4" }, "Vila Nove F.C."), /* @__PURE__ */ React.createElement("div", { className: "grid grid-cols-3 gap-4 mb-4" }, /* @__PURE__ */ React.createElement("div", { className: "bg-blue-50 p-3 rounded-lg text-center" }, /* @__PURE__ */ React.createElement("div", { className: "text-2xl font-bold text-blue-600" }, "15"), /* @__PURE__ */ React.createElement("div", { className: "text-sm text-blue-800" }, "Jogadores")), /* @__PURE__ */ React.createElement("div", { className: "bg-green-50 p-3 rounded-lg text-center" }, /* @__PURE__ */ React.createElement("div", { className: "text-2xl font-bold text-green-600" }, "3"), /* @__PURE__ */ React.createElement("div", { className: "text-sm text-green-800" }, "Jogos")), /* @__PURE__ */ React.createElement("div", { className: "bg-orange-50 p-3 rounded-lg text-center" }, /* @__PURE__ */ React.createElement("div", { className: "text-2xl font-bold text-orange-600" }, friendlyMatches.length), /* @__PURE__ */ React.createElement("div", { className: "text-sm text-orange-800" }, "Amistosos")))), /* @__PURE__ */ React.createElement("div", { className: "space-y-4" }, /* @__PURE__ */ React.createElement(
+    "button",
+    {
+      onClick: () => setCurrentScreen("searchplayers"),
+      className: "w-full bg-green-500 text-white rounded-xl p-4 flex items-center gap-4 shadow-lg"
+    },
+    /* @__PURE__ */ React.createElement(User, { className: "w-6 h-6" }),
+    /* @__PURE__ */ React.createElement("span", { className: "text-lg font-medium" }, "Contratar Jogadores")
+  ), /* @__PURE__ */ React.createElement(
+    "button",
+    {
+      onClick: () => setCurrentScreen("myteam"),
+      className: "w-full bg-blue-500 text-white rounded-xl p-4 flex items-center gap-4 shadow-lg"
+    },
+    /* @__PURE__ */ React.createElement(Users, { className: "w-6 h-6" }),
+    /* @__PURE__ */ React.createElement("span", { className: "text-lg font-medium" }, "Meu Time")
+  ), /* @__PURE__ */ React.createElement(
+    "button",
+    {
+      onClick: () => setCurrentScreen("manager"),
+      className: "w-full bg-purple-500 text-white rounded-xl p-4 flex items-center gap-4 shadow-lg"
+    },
+    /* @__PURE__ */ React.createElement(MessageSquare, { className: "w-6 h-6" }),
+    /* @__PURE__ */ React.createElement("span", { className: "text-lg font-medium" }, "Gerenciar Time")
+  ))));
+  const renderCurrentScreen = () => {
+    switch (currentScreen) {
+      case "home":
+        return /* @__PURE__ */ React.createElement(HomeScreen, null);
+      case "login":
+        return /* @__PURE__ */ React.createElement(LoginScreen, null);
+      case "register":
+        return /* @__PURE__ */ React.createElement(RegisterScreen, null);
+      case "fieldschedule":
+        return /* @__PURE__ */ React.createElement(FieldScheduleScreen, null);
+      case "searchteams":
+        return /* @__PURE__ */ React.createElement(SearchTeamsScreen, null);
+      case "searchplayers":
+        return /* @__PURE__ */ React.createElement(SearchPlayersScreen, null);
+      case "playerboard":
+        return /* @__PURE__ */ React.createElement(PlayerBoardScreen, null);
+      case "teamowner":
+        return /* @__PURE__ */ React.createElement(TeamOwnerScreen, null);
+      default:
+        return /* @__PURE__ */ React.createElement(HomeScreen, null);
+    }
+  };
+  return /* @__PURE__ */ React.createElement("div", { className: "max-w-sm mx-auto bg-white shadow-2xl rounded-3xl overflow-hidden relative" }, renderCurrentScreen());
+};
+var stdin_default = ArenaSobralApp;
+export {
+  stdin_default as default
+};
+`;
+          }
+
+          // Create a blob URL from the executable code
+          const blob = new Blob([componentCode], { type: 'text/javascript' });
+          const blobUrl = URL.createObjectURL(blob);
+
+          // Import the default export from the blob URL
+          const moduleImport = await import(blobUrl);
+          const Component = moduleImport.default;
+
+          // Clean up the blob URL
+          URL.revokeObjectURL(blobUrl);
+
+          if (Component) {
+              const rootElement = document.getElementById('root');
+              const root = createRoot(rootElement);
+
+              // Simple error boundary
+              const ErrorBoundary = ({ children }) => {
+                  try {
+                      return children;
+                  } catch (error) {
+                      console.error('Component render error:', error);
+                      return React.createElement('div', {
+                          style: { padding: '20px', color: '#d32f2f', background: '#ffebee', borderRadius: '4px' }
+                      }, [
+                          React.createElement('h3', { key: 'title' }, 'Component Error'),
+                          React.createElement('p', { key: 'error' }, 'Error: ' + error.message)
+                      ]);
+                  }
+              };
+
+              root.render(React.createElement(ErrorBoundary, {}, React.createElement(Component)));
+          } else {
+              console.error('No component found in module export');
+              document.getElementById('root').innerHTML = '<div style="padding: 20px; color: #666;">No React component found - check console for details</div>';
+          }
+      } catch (error) {
+          console.error('Error loading component:', error);
+          document.getElementById('root').innerHTML = `
+              <div style="padding: 20px; color: #d32f2f; background: #ffebee; border-radius: 4px;">
+                  <h3>Error loading component</h3>
+                  <p><strong>Error:</strong> ${error.message}</p>
+                  <p>Please check the browser console for more details.</p>
+              </div>
+          `;
+      }
+    </script>
+  </body>
+</html>
