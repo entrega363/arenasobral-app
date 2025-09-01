@@ -76,7 +76,19 @@ export function SupabaseFieldDetails({ fieldId }: FieldDetailsProps) {
       
       // Carregar reservas para a data selecionada
       const bookingData = await supabaseBookingService.getBookingsByFieldId(fieldId)
-      setBookings(bookingData)
+      // Converter Booking[] para SupabaseBooking[]
+      const supabaseBookings: SupabaseBooking[] = bookingData.map(booking => ({
+        id: booking.id,
+        field_id: booking.fieldId,
+        user_id: booking.teamId || '', // Ajustar conforme necessário
+        time_slot_id: booking.timeSlotId,
+        date: booking.date.toISOString().split('T')[0],
+        status: booking.status,
+        payment_status: 'PENDING', // Valor padrão
+        total_amount: 0, // Valor padrão
+        created_at: booking.createdAt.toISOString()
+      }))
+      setBookings(supabaseBookings)
     } catch (error) {
       console.error('Error loading field data:', error)
     } finally {
