@@ -21,6 +21,7 @@ export function FieldManagement({ onFieldSelect }: FieldManagementProps) {
     location: '',
     photo: '' // Adicionando campo para foto da arena
   })
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
 
   useEffect(() => {
     loadOwnerFields()
@@ -47,10 +48,37 @@ export function FieldManagement({ onFieldSelect }: FieldManagementProps) {
     }
   }
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Verificar se é uma imagem
+    if (!file.type.match('image.*')) {
+      alert('Por favor, selecione um arquivo de imagem válido')
+      return
+    }
+
+    // Verificar tamanho (máximo 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('A imagem deve ter no máximo 5MB')
+      return
+    }
+
+    // Criar preview
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const result = e.target?.result as string
+      setImagePreview(result)
+      setFormData({ ...formData, photo: result })
+    }
+    reader.readAsDataURL(file)
+  }
+
   const handleAddField = () => {
     setShowAddForm(true)
     setEditingField(null)
     setFormData({ name: '', location: '', photo: '' }) // Inicializando com campo de foto vazio
+    setImagePreview(null)
   }
 
   const handleEditField = (field: Field) => {
@@ -61,6 +89,7 @@ export function FieldManagement({ onFieldSelect }: FieldManagementProps) {
       location: field.location,
       photo: field.photos && field.photos.length > 0 ? field.photos[0].url : '' // Preenche a foto se existir
     })
+    setImagePreview(field.photos && field.photos.length > 0 ? field.photos[0].url : null)
   }
 
   const handleSaveField = async () => {
@@ -84,7 +113,7 @@ export function FieldManagement({ onFieldSelect }: FieldManagementProps) {
                 ...field, 
                 name: formData.name, 
                 location: formData.location,
-                ...(formData.photo && { photo: formData.photo }) // Atualiza a foto se fornecida
+                ...(formData.photo && { photos: [{ id: '1', url: formData.photo, alt: formData.name, isPrimary: true }] }) // Atualiza a foto se fornecida
               }
             : field
         )
@@ -131,6 +160,8 @@ export function FieldManagement({ onFieldSelect }: FieldManagementProps) {
 
       setShowAddForm(false)
       setEditingField(null)
+      setFormData({ name: '', location: '', photo: '' })
+      setImagePreview(null)
       loadOwnerFields()
       alert(editingField ? 'Areninha atualizada com sucesso!' : 'Areninha adicionada com sucesso!')
     } catch (error) {
@@ -224,28 +255,31 @@ export function FieldManagement({ onFieldSelect }: FieldManagementProps) {
                 {/* Campo para foto da arena */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Foto da Arena (URL)
+                    Foto da Arena
                   </label>
-                  <input
-                    type="text"
-                    value={formData.photo || ''}
-                    onChange={(e) => setFormData({...formData, photo: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Cole a URL da foto da sua arena"
-                  />
-                  {formData.photo && (
-                    <div className="mt-2">
-                      <p className="text-sm text-gray-600 mb-1">Pré-visualização:</p>
-                      <img 
-                        src={formData.photo} 
-                        alt="Pré-visualização da arena" 
-                        className="w-32 h-32 object-cover rounded-md border"
-                        onError={(e) => {
-                          e.currentTarget.src = 'https://placehold.co/300x200?text=Imagem+não+disponível'
-                        }}
+                  <div className="flex items-start gap-4">
+                    <div className="flex-1">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
+                      <p className="text-xs text-gray-500 mt-1">Formatos suportados: JPG, PNG, GIF (máx. 5MB)</p>
                     </div>
-                  )}
+                    {(imagePreview || formData.photo) && (
+                      <div className="mt-2">
+                        <img 
+                          src={imagePreview || formData.photo} 
+                          alt="Pré-visualização da arena" 
+                          className="w-16 h-16 object-cover rounded-md border"
+                          onError={(e) => {
+                            e.currentTarget.src = 'https://placehold.co/300x200?text=Imagem+não+disponível'
+                          }}
+                        />
+                      </div>
+                    )}
+                  </div>
                 </div>
                 
                 <div className="flex gap-2">
@@ -261,6 +295,7 @@ export function FieldManagement({ onFieldSelect }: FieldManagementProps) {
                       setShowAddForm(false)
                       setEditingField(null)
                       setFormData({ name: '', location: '', photo: '' })
+                      setImagePreview(null)
                     }}
                     className="flex-1"
                   >
