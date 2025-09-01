@@ -55,7 +55,9 @@ export function SupabaseFieldDetails({ fieldId }: FieldDetailsProps) {
           location: fieldData.location,
           address: fieldData.address || fieldData.location,
           description: fieldData.description || '',
-          field_type: fieldData.fieldType || 'SOCIETY',
+          field_type: fieldData.fieldType === 'FUTSAL' ? 'GRASS' : 
+                     fieldData.fieldType === 'BEACH' ? 'GRASS' : 
+                     fieldData.fieldType === 'INDOOR' ? 'CONCRETE' : 'SOCIETY',
           price_per_hour: fieldData.pricePerHour || 0,
           rating: fieldData.rating || 0,
           owner_id: fieldData.ownerId,
