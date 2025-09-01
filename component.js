@@ -1981,14 +1981,6 @@ const ArenaSobralApp = () => {
             <Trophy className="w-6 h-6" />
             <span className="text-lg font-medium">Torneios</span>
           </button>
-
-          <button 
-            onClick={() => setCurrentScreen('fieldschedule')}
-            className="w-full bg-orange-500 text-white rounded-xl p-4 flex items-center gap-4 shadow-lg"
-          >
-            <MapPin className="w-6 h-6" />
-            <span className="text-lg font-medium">Buscar Areninha</span>
-          </button>
         </div>
       </div>
     </div>
